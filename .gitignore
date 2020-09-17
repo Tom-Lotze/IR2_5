@@ -128,6 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+Literature/Zamani_2020_SearchClarification_ANNOTATED.pdf
+
+Literature/Zamani_2020_MIMICS_ANNOTATED.pdf
+
+Literature/Aliannejadi_2019_ClarifyingQuestions_ANNOTATED.pdf
+
 # CUSTOM
 DATA/
 *.DS_Store
