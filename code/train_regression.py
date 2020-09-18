@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-18 11:42
+# @Last Modified time: 2020-09-18 14:01
 
 
 import argparse
@@ -10,28 +10,28 @@ import numpy as np
 import os
 from regression import Regression
 import torch
+from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 import pickle as pkl
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '784, 392, 256, 128, 16'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 1500
+NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 200
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
+DATA_DIR_DEFAULT = "Data/"
 
 FLAGS = None
 
-
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def train():
     """
     Performs training and evaluation of Regression model.
-
     """
 
-    ### DO NOT CHANGE SEEDS!
     # Set the random seeds for reproducibility
     np.random.seed(42)
     torch.manual_seed(42)
@@ -43,10 +43,17 @@ def train():
     else:
         dnn_hidden_units = []
 
-
     # use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device :", device)
+
+     # extract training data
+    with open(os.path.join(FLAGS.data_dir, "dataloader_query_question_pooled.p"), "rb") as f:
+        dataloader = pkl.load(f)
+
+     # initialize MLP and loss function
+    nn = Regression(1536, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
+    crossEntropy = torch.nn.MSELoss()
 
 
     # initialize optimizer
@@ -68,37 +75,31 @@ def train():
     training_losses = []
     test_losses = []
 
-    # extract training data
-    dataloader = pkl.load("Data/dataloader.p")
-     # initialize MLP
-    nn = Regression(dataloader.batch_size, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
-    crossEntropy = torch.nn.MSELoss()
-
-    # perform the forward step, backward step and updating of weights max_steps number of times,
+    # training loop
     for epoch in range(FLAGS.nr_epochs):
 
-        print(f"Epoch: {epoch}")
+        print(f"\n\nEpoch: {epoch}")
 
         for batch, (x, y) in enumerate(dataloader):
 
+            batch_loss = []
+
+            # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
             x = x.reshape(y.shape[0], -1).to(device)
 
             optimizer.zero_grad()
 
+            # forward pass
             pred = nn(x)
 
             # train_acc = accuracy(pred, y)
 
-            # compute cross entropy loss
+            # compute loss and backpropagate
             loss = crossEntropy(pred, y)
+            loss.backward()
 
-
-
-
-
-            loss.backward(step)
-
+            # update the weights
             optimizer.step()
 
 
@@ -106,10 +107,13 @@ def train():
             # if step % FLAGS.eval_freq == 0:
             #     test_accuracies, test_losses = eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
 
+            # save training loss and print
             training_losses.append(loss.item())
-            if batch % 100 == 0:
-                print(f"Training loss batch {batch}: {loss.item()}")
+            batch_loss.append(loss.item())
+            # if batch % 10 == 0:
+                # print(f"Training loss batch {batch}: {loss.item()}")
 
+        print(f"Average batch loss: {np.mean(batch_loss)}")
 
     # # compute loss and accuracy on the test set a final time
     # test_accuracies, test_losses = eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
@@ -133,6 +137,9 @@ def eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
 
 
 def plotting(train_losses, test_losses, train_accuracies, test_accuracies, dnn_hidden_units, max_test):
+
+    os.makedirs("Images", exist_ok=True)
+
     plt.figure(figsize=(15, 12))
     steps_all = np.arange(1, FLAGS.max_steps+1)
     steps_test =  np.arange(0, FLAGS.max_steps+1, FLAGS.eval_freq)
@@ -217,7 +224,7 @@ if __name__ == '__main__':
       help='momentum for optimizer')
 
     FLAGS, unparsed = parser.parse_known_args()
-    FLAGS.amsgrad = bool(FLAGS.amsgrad)
+    # FLAGS.amsgrad = bool(FLAGS.amsgrad)
 
     main()
 
