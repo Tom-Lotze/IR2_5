@@ -53,7 +53,7 @@ def train():
 
      # initialize MLP and loss function
     nn = Regression(5376, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
-    crossEntropy = torch.nn.MSELoss()
+    loss_function = torch.nn.MSELoss()
 
 
     # initialize optimizer
@@ -96,7 +96,7 @@ def train():
             # train_acc = accuracy(pred, y)
 
             # compute loss and backpropagate
-            loss = crossEntropy(pred, y)
+            loss = loss_function(pred, y)
             loss.backward()
 
             # update the weights
@@ -125,14 +125,14 @@ def train():
 
     # plotting(training_losses, test_losses, training_accuracies, test_accuracies, dnn_hidden_units, max(test_accuracies))
 
-def eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses):
+def eval_on_test(nn, loss_function, x_test, y_test, test_accuracies, test_losses):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
     test_pred = nn(x_test)
     true_labels = torch.max(y_test, 1)[1]
     test_acc = accuracy(test_pred, y_test)
-    test_loss = crossEntropy(test_pred, true_labels)
+    test_loss = loss_function(test_pred, true_labels)
     print("Test accuracy is:", test_acc, "\n")
     test_accuracies.append(test_acc)
     test_losses.append(test_loss)
