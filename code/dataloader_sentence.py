@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 15:46
+# @Last Modified time: 2020-09-21 15:47
 
 import csv
 import torch
@@ -77,9 +77,6 @@ answer_embeds = embedder.encode(answers, convert_to_tensor=True, show_progress_b
 dataset = []
 
 for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
-
-    if i % 500 == 0:
-        print(i)
 
     answers = answer_embeds[i*5:i*5+5]
 
