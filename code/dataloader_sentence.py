@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 15:56
+# @Last Modified time: 2020-09-21 18:28
 
 import csv
 import torch
@@ -29,6 +29,9 @@ with open("Data/MIMICS-Click.tsv") as tsvfile:
         questions.append(line[1])
         answers.extend([line[i] for i in range(2, 7)])
         engagement_lvls.append(line[8])
+
+
+breakpoint()
 
 
 # remove headers
@@ -71,7 +74,7 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
 
     # convert to right types
     # impression_lvl = {"low": 1, "medium": 2, "high": 3}[impression_lvl]
-    engagement_lvl = torch.Tensor(int(engagement_lvls[i])).float()
+    engagement_lvl = torch.Tensor([int(engagement_lvls[i])]).float()
     # ccp1, ccp2, ccp3, cpp4, ccp5 = float(ccp1), float(ccp2), float(ccp3), float(cpp4), float(ccp5)
 
 
