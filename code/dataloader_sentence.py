@@ -16,20 +16,6 @@ from tqdm import tqdm
 
 
 
-
-
-def get_embedding(inp, model):
-    """Find the embeddings for a string input, using a specified model"""
-    # tokenize the raw input
-    tokenized_input = tokenizer(inp, return_tensors="pt")
-
-    # return pytorch tensors from the tokenized input
-    embedding = model(**tokenized_input)[0].detach()
-
-    return pooled_hidden_layer
-
-
-
 data = []
 questions = []
 queries = []
@@ -58,20 +44,22 @@ embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
 
 question_embeds = embedder.encode(questions, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
-
-# # with open(f"Data/question_embeds_distilbert.p", "wb") as f:
-# #             pkl.dump(question_embeds, f)
+question_embeds = question_embeds.to('cpu')
+torch.cuda.empty_cache()
+# with open(f"Data/question_embeds_distilbert.p", "wb") as f:
+#             pkl.dump(question_embeds, f)
 
 query_embeds = embedder.encode(queries, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
-
+query_embeds = query_embeds.to('cpu')
+torch.cuda.empty_cache()
 # with open(f"Data/query_embeds_distilbert.p", "wb") as f:
 #             pkl.dump(query_embeds, f)
 
 answer_embeds = embedder.encode(answers, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
-
+answer_ambeds = answer_embeds.to('cpu')
+torch.cuda.empty_cache()
 # with open(f"Data/answers_embeds_distilbert.p", "wb") as f:
 #             pkl.dump(answer_embeds, f)
-
 
 
 dataset = []
