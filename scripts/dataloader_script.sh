@@ -11,9 +11,10 @@ cp -r $HOME/IR2_5/ $TMPDIR/
 cd $TMPDIR/IR2_5
 
 echo "Dataloader started running" | mail $USER
+
 python code/dataloader_sentence.py
 
-cp -r  $TMPDIR/IR2_5/Data/ $HOME/IR2_5/dataloader/
+cp -r  $TMPDIR/IR2_5/Data/*.p $HOME/IR2_5/dataloader/
 
 
 echo "dataloader finished" | mail $USER
