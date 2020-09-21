@@ -31,8 +31,6 @@ with open("Data/MIMICS-Click.tsv") as tsvfile:
         engagement_lvls.append(line[8])
 
 
-breakpoint()
-
 
 # remove headers
 queries = queries[1:]

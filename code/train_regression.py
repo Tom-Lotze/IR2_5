@@ -35,7 +35,8 @@ def train():
     # Set the random seeds for reproducibility
     np.random.seed(42)
     torch.manual_seed(42)
-
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
     # Get number of units in each hidden layer
     if FLAGS.dnn_hidden_units:
         dnn_hidden_units = FLAGS.dnn_hidden_units.split(",")
@@ -79,6 +80,7 @@ def train():
     for epoch in range(FLAGS.nr_epochs):
 
         print(f"\n\nEpoch: {epoch}")
+        print(next(iter(dataloader)))
 
         for batch, (x, y) in enumerate(dataloader):
 

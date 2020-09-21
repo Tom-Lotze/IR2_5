@@ -5,7 +5,7 @@
 
 source activate ir2
 
-cp -r $HOME/IR2_5/dataloader $TMPDIR/
+cp -r $HOME/IR2_5 $TMPDIR/
 
 cd $TMPDIR/IR2_5
 mkdir $TMPDIR/Models
