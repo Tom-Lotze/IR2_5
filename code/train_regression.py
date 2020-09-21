@@ -48,8 +48,8 @@ def train():
     print("Device :", device)
 
      # extract training data
-    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") a f:
-        dataloader = DataLoader(pkl.load(fs), batch_size=64, shuffle=True)
+    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") as f:
+        dataloader = DataLoader(pkl.load(f), batch_size=64, shuffle=True)
 
      # initialize MLP and loss function
     nn = Regression(5376, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)

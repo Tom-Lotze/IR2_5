@@ -55,6 +55,10 @@ answer_embeds = embedder.encode(answers, convert_to_tensor=False, show_progress_
 # with open(f"Data/answers_embeds_distilbert.p", "wb") as f:
 #             pkl.dump(answer_embeds, f)
 
+question_embeds = torch.from_numpy(question_embeds)
+query_embeds = torch.from_numpy(query_embeds)
+answer_embeds = torch.from_numpy(answer_embeds)
+
 
 dataset = []
 
@@ -67,11 +71,11 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
 
     # convert to right types
     # impression_lvl = {"low": 1, "medium": 2, "high": 3}[impression_lvl]
-    engagement_lvl = float(engagement_lvls[i])
+    engagement_lvl = torch.Tensor(int(engagement_lvls[i])).float()
     # ccp1, ccp2, ccp3, cpp4, ccp5 = float(ccp1), float(ccp2), float(ccp3), float(cpp4), float(ccp5)
 
 
-    inp = np.concatenate((query, question, answers), 0)
+    inp = torch.cat((query, question, answers), 0)
 
     # nr_options = len([op for op in [op1, op2, op3, op4, op5] if op])
     # batch_tensor = (query, question, nr_options, impression_lvl)
