@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-18 15:48
+# @Last Modified time: 2020-09-21 15:29
 
 import csv
 import torch
@@ -55,18 +55,18 @@ embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
 question_embeds = embedder.encode(questions, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
 
-with open(f"Data/question_embeds_distilbert.p", "wb") as f:
-            pkl.dump(question_embeds, f)
+# with open(f"Data/question_embeds_distilbert.p", "wb") as f:
+#             pkl.dump(question_embeds, f)
 
 query_embeds = embedder.encode(queries, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
 
-with open(f"Data/query_embeds_distilbert.p", "wb") as f:
-            pkl.dump(query_embeds, f)
+# with open(f"Data/query_embeds_distilbert.p", "wb") as f:
+#             pkl.dump(query_embeds, f)
 
 answer_embeds = embedder.encode(answers, convert_to_tensor=True, show_progress_bar=True, batch_size=256, num_workers = 4)
 
-with open(f"Data/answers_embeds_distilbert.p", "wb") as f:
-            pkl.dump(answer_embeds, f)
+# with open(f"Data/answers_embeds_distilbert.p", "wb") as f:
+#             pkl.dump(answer_embeds, f)
 
 
 dataset = []
@@ -95,9 +95,9 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
 
 
 # convert to pytorch dataloader
-dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+# dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
 
 
 # save the dataloader final time
-with open("Data/dataloader_query_question_pooled.p", "wb") as f:
-    pkl.dump(dataloader, f)
+with open("Data/dataset.p", "wb") as f:
+    pkl.dump(dataset, f)
