@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-18 14:01
+# @Last Modified time: 2020-09-21 16:54
 
 
 import argparse
@@ -21,7 +21,7 @@ NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 200
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
-DATA_DIR_DEFAULT = "Data/"
+DATA_DIR_DEFAULT = "dataloader/"
 
 FLAGS = None
 
@@ -48,8 +48,8 @@ def train():
     print("Device :", device)
 
      # extract training data
-    with open(os.path.join(FLAGS.data_dir, "dataloader_query_question_pooled.p"), "rb") as f:
-        dataloader = pkl.load(f)
+    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") a f:
+        dataloader = DataLoader(pkl.load(fs), batch_size=64, shuffle=True)
 
      # initialize MLP and loss function
     nn = Regression(1536, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
@@ -216,15 +216,15 @@ if __name__ == '__main__':
       help='Negative slope parameter for LeakyReLU')
     parser.add_argument('--optimizer', type=str, default="SGD",
       help='Type of optimizer')
-    # parser.add_argument('--amsgrad', type=int, default=0,
-    #                     help='Boolean: Amsgrad for Adam and Adamw')
+    parser.add_argument('--amsgrad', type=int, default=0,
+                        help='Boolean: Amsgrad for Adam and Adamw')
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
 
     FLAGS, unparsed = parser.parse_known_args()
-    # FLAGS.amsgrad = bool(FLAGS.amsgrad)
+    FLAGS.amsgrad = bool(FLAGS.amsgrad)
 
     main()
 
