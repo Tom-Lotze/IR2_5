@@ -8,6 +8,7 @@ dependencies:
   - torchvision
   - cudatoolkit=10.2
   - pytorch
+  - matplotlib
   - pip:
     - sentence-transformers
 prefix: /home/stefan/anaconda3/envs/ir2

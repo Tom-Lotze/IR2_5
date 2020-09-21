@@ -62,15 +62,15 @@ def train():
         optimizer = torch.optim.SGD(nn.parameters(), lr=FLAGS.learning_rate,
             weight_decay=FLAGS.weightdecay,
             momentum=FLAGS.momentum)
-    # elif FLAGS.optimizer == "Adam":
-    #   optimizer = torch.optim.Adam(nn.parameters(), lr=FLAGS.learning_rate,
-    #     amsgrad=FLAGS.amsgrad, weight_decay=FLAGS.weightdecay)
-    # elif FLAGS.optimizer == "AdamW":
-    #   optimizer = torch.optim.AdamW(nn.parameters(), lr=FLAGS.learning_rate,
-    #     amsgrad=FLAGS.amsgrad, weight_decay=FLAGS.weightdecay)
-    # elif FLAGS.optimizer == "RMSprop":
-    #   optimizer = torch.optim.RMSprop(nn.parameters(), lr=FLAGS.learning_rate,
-    #     weight_decay=FLAGS.weightdecay, momentum=FLAGS.momentum)
+    elif FLAGS.optimizer == "Adam":
+      optimizer = torch.optim.Adam(nn.parameters(), lr=FLAGS.learning_rate,
+        amsgrad=FLAGS.amsgrad, weight_decay=FLAGS.weightdecay)
+    elif FLAGS.optimizer == "AdamW":
+      optimizer = torch.optim.AdamW(nn.parameters(), lr=FLAGS.learning_rate,
+        amsgrad=FLAGS.amsgrad, weight_decay=FLAGS.weightdecay)
+    elif FLAGS.optimizer == "RMSprop":
+      optimizer = torch.optim.RMSprop(nn.parameters(), lr=FLAGS.learning_rate,
+        weight_decay=FLAGS.weightdecay, momentum=FLAGS.momentum)
 
     # initialization for plotting and metrics
     training_losses = []
@@ -107,7 +107,7 @@ def train():
 
             # # evaluation on test set
             # if step % FLAGS.eval_freq == 0:
-            #     test_accuracies, test_losses = eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
+            #     test_accuracies, test_losses = eval_on_test(nn, loss_function, x_test, y_test, test_accuracies, test_losses)
 
             # save training loss and print
             training_losses.append(loss.item())
@@ -122,7 +122,7 @@ def train():
 
 
     # # compute loss and accuracy on the test set a final time
-    # test_accuracies, test_losses = eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
+    # test_accuracies, test_losses = eval_on_test(nn, loss_function, x_test, y_test, test_accuracies, test_losses)
     # print("Maximum accuracy :", max(test_accuracies), "after %d steps\n"%(np.argmax(test_accuracies) * FLAGS.eval_freq))
 
     # plotting(training_losses, test_losses, training_accuracies, test_accuracies, dnn_hidden_units, max(test_accuracies))
