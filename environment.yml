@@ -1,69 +1,13 @@
 name: ir2
 channels:
-  - pytorch
   - defaults
 dependencies:
-  - _libgcc_mutex
-  - blas
-  - ca-certificates
-  - certifi
-  - cudatoolkit
-  - freetype
-  - intel-openmp
-  - jpeg
-  - lcms2
-  - ld_impl_linux-64
-  - libedit
-  - libffi
-  - libgcc-ng
-  - libpng
-  - libstdcxx-ng
-  - libtiff
-  - lz4-c
-  - mkl
-  - mkl-service
-  - mkl_fft
-  - mkl_random
-  - ncurses
-  - ninja
-  - numpy
+  - python=3.7
   - numpy-base
-  - olefile
-  - openssl
-  - pillow
-  - pip
-  - python
-  - pytorch
-  - readline
-  - setuptools
-  - six
-  - sqlite
-  - tk
+  - numpy
   - torchvision
-  - wheel
-  - xz
-  - zlib
-  - zstd
+  - cudatoolkit=10.2
+  - pytorch
   - pip:
-    - chardet
-    - click
-    - filelock
-    - future
-    - idna
-    - joblib
-    - nltk
-    - packaging
-    - pyparsing
-    - regex
-    - requests
-    - sacremoses
-    - scikit-learn
-    - scipy
     - sentence-transformers
-    - sentencepiece
-    - threadpoolctl
-    - tokenizers
-    - tqdm
-    - transformers
-    - urllib3
 prefix: /home/stefan/anaconda3/envs/ir2
