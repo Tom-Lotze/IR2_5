@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 15:29
+# @Last Modified time: 2020-09-21 15:46
 
 import csv
 import torch
@@ -34,18 +34,22 @@ data = []
 questions = []
 queries = []
 answers = []
+engagement_lvls = []
+
 with open("Data/MIMICS-Click.tsv") as tsvfile:
     tsvreader = csv.reader(tsvfile, delimiter="\t")
     for line in tsvreader:
-        # data.append(line)
         queries.append(line[0])
         questions.append(line[1])
         answers.extend([line[i] for i in range(2, 7)])
+        engagement_lvls.append(line[8])
 
-# headers = data[0]
-# data = data[1:]
+
+# remove headers
 queries = queries[1:]
 questions = questions[1:]
+answers = answers[1:]
+engagement_lvls = engagement_lvls[:1]
 
 
 
@@ -55,18 +59,19 @@ embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
 question_embeds = embedder.encode(questions, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
 
-# with open(f"Data/question_embeds_distilbert.p", "wb") as f:
-#             pkl.dump(question_embeds, f)
+# # with open(f"Data/question_embeds_distilbert.p", "wb") as f:
+# #             pkl.dump(question_embeds, f)
 
 query_embeds = embedder.encode(queries, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
 
 # with open(f"Data/query_embeds_distilbert.p", "wb") as f:
 #             pkl.dump(query_embeds, f)
 
-answer_embeds = embedder.encode(answers, convert_to_tensor=True, show_progress_bar=True, batch_size=256, num_workers = 4)
+answer_embeds = embedder.encode(answers, convert_to_tensor=True, show_progress_bar=True, batch_size=128, num_workers = 4)
 
 # with open(f"Data/answers_embeds_distilbert.p", "wb") as f:
 #             pkl.dump(answer_embeds, f)
+
 
 
 dataset = []
@@ -76,16 +81,18 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
     if i % 500 == 0:
         print(i)
 
-    answers = answer_embeds[i:i+5]
+    answers = answer_embeds[i*5:i*5+5]
 
+    # reshape answers
+    answers = answers.reshape(-1, 1)
 
     # convert to right types
     # impression_lvl = {"low": 1, "medium": 2, "high": 3}[impression_lvl]
-    engagement_lvl = torch.Tensor([int(engagement_lvl)]).float()
+    engagement_lvl = torch.Tensor([int(engagement_lvls[i])]).float()
     # ccp1, ccp2, ccp3, cpp4, ccp5 = float(ccp1), float(ccp2), float(ccp3), float(cpp4), float(ccp5)
 
 
-    q = torch.cat((query, question), 1)
+    q = torch.cat((query, question, answers), 1)
 
     # nr_options = len([op for op in [op1, op2, op3, op4, op5] if op])
     # batch_tensor = (query, question, nr_options, impression_lvl)
