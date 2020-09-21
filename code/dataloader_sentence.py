@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 15:47
+# @Last Modified time: 2020-09-21 15:56
 
 import csv
 import torch
@@ -49,7 +49,7 @@ with open("Data/MIMICS-Click.tsv") as tsvfile:
 queries = queries[1:]
 questions = questions[1:]
 answers = answers[1:]
-engagement_lvls = engagement_lvls[:1]
+engagement_lvls = engagement_lvls[1:]
 
 
 
@@ -81,7 +81,7 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
     answers = answer_embeds[i*5:i*5+5]
 
     # reshape answers
-    answers = answers.reshape(-1, 1)
+    answers = answers.reshape(-1)
 
     # convert to right types
     # impression_lvl = {"low": 1, "medium": 2, "high": 3}[impression_lvl]
@@ -89,17 +89,18 @@ for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
     # ccp1, ccp2, ccp3, cpp4, ccp5 = float(ccp1), float(ccp2), float(ccp3), float(cpp4), float(ccp5)
 
 
-    q = torch.cat((query, question, answers), 1)
+    inp = torch.cat((query, question, answers), 0)
 
     # nr_options = len([op for op in [op1, op2, op3, op4, op5] if op])
     # batch_tensor = (query, question, nr_options, impression_lvl)
 
     # Add the datapoint to the dataset
-    dataset.append((q, engagement_lvl))
+    dataset.append((inp, engagement_lvl))
 
 
 # convert to pytorch dataloader
 # dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
+
 
 
 # save the dataloader final time
