@@ -31,7 +31,7 @@ def train():
     """
     Performs training and evaluation of Regression model.
     """
-
+    print("Training started")
     # Set the random seeds for reproducibility
     np.random.seed(42)
     torch.manual_seed(42)
@@ -80,7 +80,6 @@ def train():
     for epoch in range(FLAGS.nr_epochs):
 
         print(f"\n\nEpoch: {epoch}")
-        print(next(iter(dataloader)))
 
         for batch, (x, y) in enumerate(dataloader):
 
