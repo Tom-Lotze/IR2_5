@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 16:54
+# @Last Modified time: 2020-09-21 17:10
 
 
 import argparse
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 # Default constants
-DNN_HIDDEN_UNITS_DEFAULT = '784, 392, 256, 128, 16'
+DNN_HIDDEN_UNITS_DEFAULT = '256, 128, 32'
 LEARNING_RATE_DEFAULT = 1e-3
 NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 200
@@ -52,7 +52,7 @@ def train():
         dataloader = DataLoader(pkl.load(fs), batch_size=64, shuffle=True)
 
      # initialize MLP and loss function
-    nn = Regression(1536, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
+    nn = Regression(5376, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
     crossEntropy = torch.nn.MSELoss()
 
 
@@ -114,6 +114,10 @@ def train():
                 # print(f"Training loss batch {batch}: {loss.item()}")
 
         print(f"Average batch loss: {np.mean(batch_loss)}")
+
+
+        torch.save(nn.state_dict(), f"Models/Regression_{epoch}.pt")
+
 
     # # compute loss and accuracy on the test set a final time
     # test_accuracies, test_losses = eval_on_test(nn, crossEntropy, x_test, y_test, test_accuracies, test_losses)
