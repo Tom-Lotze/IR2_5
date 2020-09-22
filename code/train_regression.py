@@ -94,7 +94,7 @@ def train():
         print(f"\n\nEpoch: {epoch}")
         batch_losses = []
 
-        for batch, (x, y) in enumerate(dataloader):
+        for batch, (x, y) in enumerate(train_dl):
 
 
 
@@ -133,7 +133,7 @@ def train():
     test_loss = eval_on_test(nn, loss_function, test_dl)
     print(f"Loss on test set: {test_loss}")
 
-    plotting(train_losses, valid_losses, test_loss)
+    plotting(training_losses, valid_losses, test_loss)
 
 
 
@@ -145,7 +145,7 @@ def eval_on_test(nn, loss_function, dl):
     with torch.no_grad():
         losses = []
         for (x, y) in dl:
-            test_pred = nn(x_test)
+            test_pred = nn(x)
             loss = loss_function(test_pred, y)
             losses.append(loss.item())
 
@@ -157,12 +157,12 @@ def plotting(train_losses, valid_losses, test_loss):
     os.makedirs("Images", exist_ok=True)
 
     plt.figure(figsize=(15, 12))
-    steps_all = np.arange(1, len(train_losses))
+    steps_all = np.arange(1, len(train_losses)+1)
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_all, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hline(test_loss, 0, max(steps_all), label="Test loss")
+    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
     plt.title('Losses over training, including final test loss')
 
     plt.xlabel('Epoch')

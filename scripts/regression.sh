@@ -8,13 +8,15 @@ source activate ir2
 cp -r $HOME/IR2_5 $TMPDIR/
 
 cd $TMPDIR/IR2_5
-mkdir $TMPDIR/Models
+mkdir -p Models
+mkdir -p Images
 
 echo "Regression started running" | mail $USER
 
-python code/train_regression.py -nr_epochs 10
+python code/train_regression.py --nr_epochs 500
 
-cp -r $TMPDIR/Models/ $HOME/IR2_5/
+cp -r Models/* $HOME/IR2_5/Models/
+cp -r Images/* $HOME/IR2_5/Images/
 
 echo "Regression finished" | mail $USER
 
