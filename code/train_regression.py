@@ -54,7 +54,7 @@ def train():
 
     len_all = len(dataset)
 
-    train_len, valid_len = int(0.8 * len_all), int(0.05 * len_all)
+    train_len, valid_len = int(0.7 * len_all), int(0.15 * len_all)
     test_len = len_all - train_len - valid_len
     splits = [train_len, valid_len, test_len]
     train_data, valid_data, test_data = random_split(dataset, splits)
@@ -93,6 +93,7 @@ def train():
 
         print(f"\n\nEpoch: {epoch}")
         batch_losses = []
+        nn.train()
 
         for batch, (x, y) in enumerate(train_dl):
 
@@ -125,19 +126,19 @@ def train():
         print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
 
         # get loss on validation set and evaluate
-        valid_losses.append(eval_on_test(nn, loss_function, valid_dl))
+        valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
         torch.save(nn.state_dict(), f"Models/Regression.pt")
 
 
     # compute loss and accuracy on the test set
-    test_loss = eval_on_test(nn, loss_function, test_dl)
+    test_loss = eval_on_test(nn, loss_function, test_dl, device)
     print(f"Loss on test set: {test_loss}")
 
     plotting(training_losses, valid_losses, test_loss)
 
 
 
-def eval_on_test(nn, loss_function, dl):
+def eval_on_test(nn, loss_function, dl, device):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
@@ -146,6 +147,7 @@ def eval_on_test(nn, loss_function, dl):
         losses = []
         for (x, y) in dl:
             test_pred = nn(x)
+            y = y.to(device)
             loss = loss_function(test_pred, y)
             losses.append(loss.item())
 
@@ -153,16 +155,17 @@ def eval_on_test(nn, loss_function, dl):
 
 
 def plotting(train_losses, valid_losses, test_loss):
+    plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
 
-    plt.figure(figsize=(15, 12))
+    plt.figure(figsize=(20, 12))
     steps_all = np.arange(1, len(train_losses)+1)
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_all, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
+    plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
     plt.title('Losses over training, including final test loss')
 
     plt.xlabel('Epoch')
