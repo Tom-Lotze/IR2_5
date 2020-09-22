@@ -87,12 +87,12 @@ def train():
 
             # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
-            x = x.reshape(y.shape[0], -1).to(device)
+            y = y.reshape(y.shape[0], -1).to(device)
 
             optimizer.zero_grad()
 
             # forward pass
-            pred = nn(x)
+            pred = nn(x).to(device)
 
             # train_acc = accuracy(pred, y)
 
