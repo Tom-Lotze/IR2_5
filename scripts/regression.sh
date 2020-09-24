@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name="regression"
-#SBATCH --time=10:00:00
+#SBATCH --time=24:00:00
 #SBATCH --partition=gpu_shared_course
 
 module load pre2019
@@ -10,6 +10,7 @@ source activate ir2
 cp -r $HOME/IR2_5 $TMPDIR/
 
 cd $TMPDIR/IR2_5
+pwd
 mkdir -p Models
 mkdir -p Images
 
