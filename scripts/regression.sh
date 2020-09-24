@@ -16,7 +16,7 @@ mkdir -p Images
 
 echo "Regression started running" | mail $USER
 
-python code/train_regression.py --nr_epochs 500 --weightdecay 0.02 --optimizer AdamW --amsgrad 1
+python code/train_regression.py --nr_epochs 200 --weightdecay 0.02 --optimizer AdamW --amsgrad 1
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
