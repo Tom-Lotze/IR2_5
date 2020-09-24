@@ -3,8 +3,10 @@
 #SBATCH --time=10:00:00
 #SBATCH --partition=gpu_shared_course
 
-source activate ir2
 
+module load pre2019
+module load Miniconda3
+source activate ir2
 
 cp -r $HOME/IR2_5/ $TMPDIR/
 
