@@ -5,9 +5,11 @@ dependencies:
   - python=3.7
   - numpy-base
   - numpy
-  - torchvision
+  - pip
+  - cudnn
   - cudatoolkit=10.2
   - pytorch
+  - torchvision
   - matplotlib
   - pip:
     - sentence-transformers
