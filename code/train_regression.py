@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 12:34
+# @Last Modified time: 2020-09-25 13:27
 
 
 import argparse
@@ -16,6 +16,7 @@ import pickle as pkl
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '256, 128, 32'
+DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
 NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 200
@@ -43,6 +44,9 @@ def train():
         dnn_hidden_units = [int(dnn_hidden_unit_) for dnn_hidden_unit_ in dnn_hidden_units]
     else:
         dnn_hidden_units = []
+
+    # convert dropout percentages
+    dropout_percentages = [int(perc) for perc in FLAGS.dropout_percentages.split(',')]
 
     # use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -89,7 +93,7 @@ def train():
     valid_losses = []
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}"
+    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.nr_epochs}"
 
     # training loop
     for epoch in range(FLAGS.nr_epochs):
@@ -205,6 +209,8 @@ if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
+      help='Comma separated list of number of units in each hidden layer')
+    parser.add_argument('--dropout_percentages', type = str, default = DROPOUT_DEFAULT,
       help='Comma separated list of number of units in each hidden layer')
     parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
       help='Learning rate')
