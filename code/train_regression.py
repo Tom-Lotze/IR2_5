@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 13:54
+# @Last Modified time: 2020-09-25 14:53
 
 
 import argparse
@@ -69,7 +69,7 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, 1, FLAGS.neg_slope).to(device)
+    nn = Regression(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
 
@@ -226,6 +226,8 @@ if __name__ == '__main__':
       help='Type of optimizer')
     parser.add_argument('--amsgrad', type=int, default=0,
                         help='Boolean: Amsgrad for Adam and Adamw')
+    parser.add_argument('--batchnorm', type=int, default=0,
+                        help='Boolean: apply batch normalization?')
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
@@ -233,6 +235,7 @@ if __name__ == '__main__':
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
+    FLAGS.batchnorm = bool(FLAGS.batchnorm)
 
     main()
 

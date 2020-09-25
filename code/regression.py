@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 13:58
+# @Last Modified time: 2020-09-25 14:52
 
 import torch
 import torch.nn as nn
@@ -17,7 +17,7 @@ class Regression(nn.Module):
   Once initialized an Regression object can perform forward.
   """
 
-  def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=1, neg_slope=0.02):
+  def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=1, neg_slope=0.02, batchnorm=False):
     """
     Initializes Regression object.
 
@@ -39,7 +39,10 @@ class Regression(nn.Module):
       for nr_nodes, drop_perc in zip(n_hidden, dropout_percentages):
         layer_list.append(nn.Linear(n_inputs, nr_nodes))
         layer_list.append(nn.Dropout(p=drop_perc))
+        layer_list.append(nn.BatchNorm1d(nr_nodes))
         layer_list.append(nn.LeakyReLU(neg_slope))
+
+
         n_inputs = nr_nodes
     layer_list += [nn.Linear(n_inputs, n_classes)]
 
