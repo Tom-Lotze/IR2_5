@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-22 10:38
+# @Last Modified time: 2020-09-25 12:34
 
 
 import argparse
@@ -88,6 +88,9 @@ def train():
     training_losses = []
     valid_losses = []
 
+    # construct name for saving models and figures
+    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}"
+
     # training loop
     for epoch in range(FLAGS.nr_epochs):
 
@@ -127,14 +130,14 @@ def train():
 
         # get loss on validation set and evaluate
         valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
-        torch.save(nn.state_dict(), f"Models/Regression.pt")
+        torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
 
 
     # compute loss and accuracy on the test set
     test_loss = eval_on_test(nn, loss_function, test_dl, device)
     print(f"Loss on test set: {test_loss}")
 
-    plotting(training_losses, valid_losses, test_loss)
+    plotting(training_losses, valid_losses, test_loss, variables_string)
 
 
 
@@ -154,7 +157,7 @@ def eval_on_test(nn, loss_function, dl, device):
     return np.mean(losses)
 
 
-def plotting(train_losses, valid_losses, test_loss):
+def plotting(train_losses, valid_losses, test_loss, variables_string):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -175,7 +178,7 @@ def plotting(train_losses, valid_losses, test_loss):
 
     plt.tight_layout()
 
-    fig_name = "loss_plot_regression.png"
+    fig_name = f"loss_plot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
