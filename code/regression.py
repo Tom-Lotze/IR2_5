@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 13:22
+# @Last Modified time: 2020-09-25 13:58
 
 import torch
 import torch.nn as nn
@@ -36,7 +36,7 @@ class Regression(nn.Module):
     super(Regression, self).__init__()
     layer_list = []
     if n_hidden:
-      for nr_nodes, drop_perc in zip(n_hidden, dropout_percentage):
+      for nr_nodes, drop_perc in zip(n_hidden, dropout_percentages):
         layer_list.append(nn.Linear(n_inputs, nr_nodes))
         layer_list.append(nn.Dropout(p=drop_perc))
         layer_list.append(nn.LeakyReLU(neg_slope))
