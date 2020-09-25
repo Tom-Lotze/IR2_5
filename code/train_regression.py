@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 13:27
+# @Last Modified time: 2020-09-25 13:54
 
 
 import argparse
@@ -104,8 +104,6 @@ def train():
 
         for batch, (x, y) in enumerate(train_dl):
 
-
-
             # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
@@ -186,10 +184,10 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
-      """
-      Prints all entries in FLAGS variable.
-      """
-      for key, value in vars(FLAGS).items():
+    """
+    Prints all entries in FLAGS variable.
+    """
+    for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
 
 def main():
