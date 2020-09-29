@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name="regression"
-#SBATCH --time=24:00:00
+#SBATCH --job-name="cuda_test"
+#SBATCH --time=00:05:00
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:0
 
