@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-28 15:09
+# @Last Modified time: 2020-09-30 12:34
 
 
 import argparse
@@ -48,6 +48,15 @@ def train():
     # convert dropout percentages
     dropout_percentages = [int(perc) for perc in FLAGS.dropout_percentages.split(',')]
 
+    # check if length of dropout is equal to nr of hidden layers
+    if len(dropout_percentages) != len(dnn_hidden_units):
+        dropout_len = len(dropout_percentages)
+        hidden_len = len(dnn_hidden_units)
+        if dropout_len < hidden_len:
+            for _ in range(hidden_len-dropout_len):
+                dropout_percentages.append(0)
+        else:
+            dropout_percentages = dropout_percentages[:hidden_len]
     # use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device :", device)
