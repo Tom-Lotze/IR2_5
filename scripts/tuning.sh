@@ -3,10 +3,11 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=20:00:00
+#SBATCH --time=24:00:00
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:1
 
+module purge
 module load pre2019
 module load Miniconda3
 source activate ir2
@@ -32,7 +33,7 @@ do
     do
       for units in "${dnn[@]}"
       do
-        python code/train_regression.py --nr_epochs 200 --optimizer $optimizer\
+        python code/train_regression.py --nr_epochs 80 --optimizer $optimizer\
          --learning_rate "$learning_rate" --amsgrad "1"\
          --dnn_hidden_units "$units" --weightdecay "$weight_decay"\
          >> results_tuning.txt
