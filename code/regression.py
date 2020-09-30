@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-25 14:52
+# @Last Modified time: 2020-09-30 12:27
 
 import torch
 import torch.nn as nn
@@ -34,6 +34,9 @@ class Regression(nn.Module):
     """
 
     super(Regression, self).__init__()
+
+    assert len(dropout_percentages) == len(n_hidden)
+
     layer_list = []
     if n_hidden:
       for nr_nodes, drop_perc in zip(n_hidden, dropout_percentages):
