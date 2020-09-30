@@ -2,7 +2,7 @@
 #SBATCH --job-name="cuda_test"
 #SBATCH --time=00:05:00
 #SBATCH --partition=gpu_shared_course
-#SBATCH --gres=gpu:0
+#SBATCH --gres=gpu:1
 
 module load pre2019
 module load Miniconda3
