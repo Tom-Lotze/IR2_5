@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-02 13:09
+# @Last Modified time: 2020-10-02 14:49
 
 
 import argparse
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 
 # Default constants
-DNN_HIDDEN_UNITS_DEFAULT = '256, 128, 32'
+DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
 NR_EPOCHS_DEFAULT = 500
@@ -107,7 +107,7 @@ def train():
     # training loop
     for epoch in range(FLAGS.nr_epochs):
 
-        print(f"\n\nEpoch: {epoch}")
+        print(f"\nEpoch: {epoch}")
         batch_losses = []
         nn.train()
 
@@ -121,8 +121,6 @@ def train():
 
             # forward pass
             pred = nn(x).to(device)
-
-            # train_acc = accuracy(pred, y)
 
             # compute loss and backpropagate
             loss = loss_function(pred, y)
@@ -243,6 +241,7 @@ if __name__ == '__main__':
                         help='Boolean: Amsgrad for Adam and Adamw')
     parser.add_argument('--batchnorm', type=int, default=0,
                         help='Boolean: apply batch normalization?')
+    # 0.0001 seems optimal
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
