@@ -20,9 +20,12 @@ mkdir -p Images
 echo "starting hyperparam tuning" | mail $USER
 
 declare -a dnn=("256, 128, 32" "2000, 100, 16" "300, 32")
-declare -a lrs=("0.001" "0.01" "0.0001")
-declare -a wd=("0.00001" "0.01")
-declare -a dropouts = ("0.2, 0.1, 0.05" "0.1 0")
+declare -a lrs=("0.001")
+declare -a wd=("0.00001")
+declare -a dropouts=("0.2, 0.1, 0.05" "0.1 0")
+declare len=${#dropouts[@]}
+
+touch results_tuning_drop.txt
 
 for drop in "${dropouts[@]}"
 do
@@ -31,12 +34,14 @@ do
   do
     for learning_rate in "${lrs[@]}"
     do
-      for units in "${dnn[@]}"
+      for i in $(seq 0 "$len")
       do
+        echo "training new model"
         python code/train_regression.py --nr_epochs 150 --optimizer "Adam"\
          --learning_rate "$learning_rate" --amsgrad "1"\
-         --dnn_hidden_units "$units" --weightdecay "$weight_decay"\
-         --dropout_percentages "$drop" >> results_tuning.txt
+         --dnn_hidden_units "${dnn[$i]}" --weightdecay "$weight_decay"\
+         --dropout_percentages "${dropouts[$i]}" >> results_tuning_drop.txt
+        cp results_tuning_drop.txt $HOME/IR2_5/
        done
     done
   done
