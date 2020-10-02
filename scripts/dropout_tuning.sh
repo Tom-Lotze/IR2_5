@@ -19,36 +19,33 @@ mkdir -p Images
 
 echo "starting hyperparam tuning" | mail $USER
 
-declare -a dnn=("256, 128, 32" "2000, 100, 16" "300, 32")
+declare -a dnn=("256, 128, 32" "300, 32" "300, 32" "300, 32" "300")
 declare -a lrs=("0.001")
 declare -a wd=("0.00001")
-declare -a dropouts=("0.2, 0.1, 0.05" "0.1 0")
+declare -a dropouts=("0.2, 0.1, 0.05" "0.1 0" "0.1 0.1" "0.2 0.1" "0.1")
 declare len=${#dropouts[@]}
 
-touch results_tuning_drop.txt
+echo "dropout tuning script" > results_tuning_drop.txt
 
-for drop in "${dropouts[@]}"
+
+for weight_decay in "${wd[@]}"
 do
-  echo "$drop" | mail $USER
-  for weight_decay in "${wd[@]}"
+  for learning_rate in "${lrs[@]}"
   do
-    for learning_rate in "${lrs[@]}"
+    for i in $(seq 0 "$len")
     do
-      for i in $(seq 0 "$len")
-      do
-        echo "training new model"
-        python code/train_regression.py --nr_epochs 150 --optimizer "Adam"\
-         --learning_rate "$learning_rate" --amsgrad "1"\
-         --dnn_hidden_units "${dnn[$i]}" --weightdecay "$weight_decay"\
-         --dropout_percentages "${dropouts[$i]}" >> results_tuning_drop.txt
-        cp results_tuning_drop.txt $HOME/IR2_5/
-       done
-    done
+      echo "training new model"
+      python code/train_regression.py --nr_epochs 150 --optimizer "Adam"\
+       --learning_rate "$learning_rate" --amsgrad "1"\
+       --dnn_hidden_units "${dnn[$i]}" --weightdecay "$weight_decay"\
+       --dropout_percentages "${dropouts[$i]}" --batchnorm 1 >> results_tuning_drop.txt
+      cp results_tuning_drop.txt $HOME/IR2_5/
+     done
   done
 done
 
+
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
-cp results_tuning.txt $HOME/IR2_5/
 
 echo "Dropout search finished, results copied back to home" | mail $USER

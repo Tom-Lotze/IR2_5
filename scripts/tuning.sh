@@ -18,6 +18,9 @@ cd $TMPDIR/IR2_5
 mkdir -p Models
 mkdir -p Images
 
+
+echo "Results file" > results_tuning.txt
+
 echo "starting hyperparam tuning" | mail $USER
 
 declare -a dnn=("256, 128, 32" "2000, 100, 16" "300, 32")
