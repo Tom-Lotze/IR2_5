@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-02 13:06
+# @Last Modified time: 2020-10-02 13:09
 
 
 import argparse
@@ -157,6 +157,7 @@ def eval_on_test(nn, loss_function, dl, device):
     Find the accuracy and loss on the test set, given the current weights
     """
     nn.eval()
+    nn.to(device)
     with torch.no_grad():
         losses = []
         for (x, y) in dl:
