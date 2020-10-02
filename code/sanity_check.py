@@ -114,11 +114,12 @@ def train():
         for batch, (x, y) in enumerate(train_dl):
 
             # append label to batch
-            onehot_y = torch.zeros(11)
-            onehot_y[y.long()] = 1
-            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 0)
+            print("y", y.shape)
+            onehot_y = torch.nn.functional.one_hot(y.squeeze().to(torch.int64), num_classes=11)
+            print("onehot", onehot_y.shape)
+            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 1)
 
-            # squeeze the input, and put on device
+          # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
@@ -164,13 +165,11 @@ def eval_on_test(nn, loss_function, dl, device):
     with torch.no_grad():
         losses = []
         for (x, y) in dl:
+            onehot_y = torch.nn.functional.one_hot(y.squeeze().to(torch.int64), num_classes=11)
+            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 1)
 
-            onehot_y = torch.zeros(10)
-            onehot_y[y.long()] = 1
-            x = torch.cat((x, onehot_y), 0)
-
-            x = x.to(device)
-            y = y.to(device)
+            x = x.reshape(x.shape[0], -1).to(device)
+            y = y.reshape(y.shape[0], -1).to(device)
 
             test_pred = nn(x).to(device)
             print(test_pred)
