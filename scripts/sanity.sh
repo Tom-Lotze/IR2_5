@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name="sanity check"
+#SBATCH --job-name="sanity_check"
 #SBATCH --time=24:00:00
 #SBATCH --partition=gpu_shared_course
 #SBATCH --gres=gpu:1

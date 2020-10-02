@@ -78,7 +78,7 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5386, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = Regression(5387, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
 
@@ -114,9 +114,9 @@ def train():
         for batch, (x, y) in enumerate(train_dl):
 
             # append label to batch
-            onehot_y = torch.zeros(10)
+            onehot_y = torch.zeros(11)
             onehot_y[y.long()] = 1
-            x = torch.cat((x, onehot_y), 0)
+            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 0)
 
             # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
