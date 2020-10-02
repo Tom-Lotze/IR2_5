@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-02 12:01
+# @Last Modified time: 2020-10-02 13:06
 
 
 import argparse
@@ -102,7 +102,7 @@ def train():
     valid_losses = []
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.nr_epochs}"
+    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_percentages}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     # training loop
     for epoch in range(FLAGS.nr_epochs):
