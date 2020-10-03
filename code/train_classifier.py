@@ -2,13 +2,13 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-03 18:11
+# @Last Modified time: 2020-10-03 18:10
 
 
 import argparse
 import numpy as np
 import os
-from regression import Regression
+from classification import Classification
 import torch
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def train():
     """
-    Performs training and evaluation of Regression model.
+    Performs training and evaluation of Classification model.
     """
     print("Training started")
     # Set the random seeds for reproducibility
@@ -78,8 +78,8 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
-    loss_function = torch.nn.MSELoss()
+    nn = Classification(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    loss_function = torch.nn.CrossEntropyLoss
 
 
     # initialize optimizer
@@ -139,7 +139,7 @@ def train():
 
         # get loss on validation set and evaluate
         valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
-        torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
+        torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
 
 
     # compute loss and accuracy on the test set
