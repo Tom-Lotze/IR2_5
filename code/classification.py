@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-03 17:44
+# @Last Modified time: 2020-10-04 13:15
 
 import torch
 import torch.nn as nn
@@ -47,7 +47,7 @@ class Classification(nn.Module):
 
 
         n_inputs = nr_nodes
-    layer_list += [nn.Linear(n_inputs, n_classes), nn.Softmax()]
+    layer_list += [nn.Linear(n_inputs, n_classes), nn.Softmax(dim=0)]
 
     self.layers = nn.ModuleList(layer_list)
 
