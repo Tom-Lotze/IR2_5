@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-03 18:11
+# @Last Modified time: 2020-10-02 15:09
 
 
 import argparse
@@ -78,7 +78,7 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = Regression(5387, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
 
@@ -113,7 +113,13 @@ def train():
 
         for batch, (x, y) in enumerate(train_dl):
 
-            # squeeze the input, and put on device
+            # append label to batch
+            print("y", y.shape)
+            onehot_y = torch.nn.functional.one_hot(y.squeeze().to(torch.int64), num_classes=11)
+            print("onehot", onehot_y.shape)
+            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 1)
+
+          # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
@@ -159,10 +165,14 @@ def eval_on_test(nn, loss_function, dl, device):
     with torch.no_grad():
         losses = []
         for (x, y) in dl:
-            x = x.to(device)
-            y = y.to(device)
+            onehot_y = torch.nn.functional.one_hot(y.squeeze().to(torch.int64), num_classes=11)
+            x = torch.cat((x.reshape(x.shape[0], -1), onehot_y), 1)
+
+            x = x.reshape(x.shape[0], -1).to(device)
+            y = y.reshape(y.shape[0], -1).to(device)
 
             test_pred = nn(x).to(device)
+            print(test_pred)
 
             loss = loss_function(test_pred, y)
             losses.append(loss.item())
