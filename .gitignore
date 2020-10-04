@@ -139,3 +139,4 @@ Data/
 *.DS_Store
 
 code/.vscode/
+dataloader/
