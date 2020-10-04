@@ -1,14 +1,7 @@
-# -*- coding: utf-8 -*-
-# @Author: TomLotze
-# @Date:   2020-09-18 11:18
-# @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-30 12:27
-
 import torch
 import torch.nn as nn
 
-
-class Regression(nn.Module):
+class RankNet(nn.Module):
   """
   This class implements a Multi-layer Perceptron in PyTorch.
   It handles the different layers and parameters of the model.
@@ -18,7 +11,7 @@ class Regression(nn.Module):
   def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=1,
                neg_slope=0.02, batchnorm=False):
     """
-    Initializes Regression object.
+    Initializes RankNet object.
 
     Args:
       n_inputs: number of inputs.
@@ -32,10 +25,7 @@ class Regression(nn.Module):
       neg_slope: negative slope parameter for LeakyReLU
     """
 
-    super(Regression, self).__init__()
-
-    assert len(dropout_percentages) == len(n_hidden)
-
+    super(RankNet, self).__init__()
     layer_list = []
     if n_hidden:
       for nr_nodes, drop_perc in zip(n_hidden, dropout_percentages):
@@ -68,6 +58,4 @@ class Regression(nn.Module):
       x = layer(x)
 
     return x
-
-
 
