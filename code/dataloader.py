@@ -127,7 +127,7 @@ def load():
 
         # save the dataloader final time
         with open((FLAGS.folder+FLAGS.filename).replace('tsv', 'p'), "wb") as f:
-            pkl.dump(dataset, f)
+            pkl.dump(dataset, f, protocol=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
