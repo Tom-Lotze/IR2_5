@@ -193,7 +193,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
 
     plt.tight_layout()
 
-    fig_name = f"loss_plot_{variables_string}.png"
+    fig_name = f"classification_loss_plot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
