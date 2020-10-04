@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-04 13:18
+# @Last Modified time: 2020-10-04 13:30
 
 
 import argparse
@@ -123,7 +123,7 @@ def train():
             pred = nn(x).to(device)
 
             # compute loss and backpropagate
-            loss = loss_function(pred, y)
+            loss = loss_function(pred, torch.max(y, 1)[1])
             loss.backward()
 
             # update the weights
@@ -164,7 +164,7 @@ def eval_on_test(nn, loss_function, dl, device):
 
             test_pred = nn(x).to(device)
 
-            loss = loss_function(test_pred, y)
+            loss = loss_function(test_pred, torch.max(y, 1)[1])
             losses.append(loss.item())
 
     return np.mean(losses)
