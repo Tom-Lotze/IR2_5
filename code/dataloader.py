@@ -15,6 +15,7 @@ from tqdm import tqdm
 import argparse
 import os
 import itertools
+from collections import defaultdict
 
 FLAGS = None
 

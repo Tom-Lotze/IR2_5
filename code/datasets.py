@@ -12,6 +12,7 @@ class RankDataSet(Dataset):
     def __getitem__(self, index):
         # TODO
         indices = self.dataset.ranges[index]
+        labels = self.dataset.engagement_lvls[indices]
         
 
         return vectors, labels
