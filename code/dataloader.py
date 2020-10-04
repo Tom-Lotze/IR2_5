@@ -55,6 +55,9 @@ class Data():
         return list(indices.values())
 
 def load():
+    """
+    Load all data and store it in either a list (old) or in a dataset class (new)
+    """
     questions = []
     queries = []
     answers = []
@@ -62,6 +65,7 @@ def load():
     engagement_lvls = []
     click_probs = []
 
+    # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
         raise OSError(f"Folder {FLAGS.folder} does not exist")
     if not os.path.exists(FLAGS.folder+FLAGS.filename):
