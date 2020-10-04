@@ -3,9 +3,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=3
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=24:00:00
+#SBATCH --time=40:00:00
 #SBATCH --partition=gpu_shared_course
-#SBATCH --gres=gpu:1
 
 module purge
 module load pre2019
@@ -17,6 +16,9 @@ cd $TMPDIR/IR2_5
 
 mkdir -p Models
 mkdir -p Images
+
+
+echo "Results file" > results_tuning.txt
 
 echo "starting hyperparam tuning" | mail $USER
 

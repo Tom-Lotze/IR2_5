@@ -2,13 +2,13 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-03 18:11
+# @Last Modified time: 2020-10-04 13:30
 
 
 import argparse
 import numpy as np
 import os
-from regression import Regression
+from classification import Classification
 import torch
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
@@ -30,7 +30,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def train():
     """
-    Performs training and evaluation of Regression model.
+    Performs training and evaluation of Classification model.
     """
     print("Training started")
     # Set the random seeds for reproducibility
@@ -78,8 +78,8 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
-    loss_function = torch.nn.MSELoss()
+    nn = Classification(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    loss_function = torch.nn.CrossEntropyLoss()
 
 
     # initialize optimizer
@@ -115,7 +115,7 @@ def train():
 
             # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).to(device)
+            y = y.reshape(y.shape[0], -1).long().to(device)
 
             optimizer.zero_grad()
 
@@ -123,7 +123,7 @@ def train():
             pred = nn(x).to(device)
 
             # compute loss and backpropagate
-            loss = loss_function(pred, y)
+            loss = loss_function(pred, torch.max(y, 1)[1])
             loss.backward()
 
             # update the weights
@@ -139,7 +139,7 @@ def train():
 
         # get loss on validation set and evaluate
         valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
-        torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
+        torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
 
 
     # compute loss and accuracy on the test set
@@ -160,11 +160,11 @@ def eval_on_test(nn, loss_function, dl, device):
         losses = []
         for (x, y) in dl:
             x = x.to(device)
-            y = y.to(device)
+            y = y.long().to(device)
 
             test_pred = nn(x).to(device)
 
-            loss = loss_function(test_pred, y)
+            loss = loss_function(test_pred, torch.max(y, 1)[1])
             losses.append(loss.item())
 
     return np.mean(losses)
@@ -193,7 +193,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
 
     plt.tight_layout()
 
-    fig_name = f"loss_plot_{variables_string}.png"
+    fig_name = f"classification_loss_plot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
