@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 17:06
+# @Last Modified time: 2020-10-05 17:14
 
 
 import argparse
@@ -30,7 +30,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 
 
-def accuracy(predictions, targets):
+def get_accuracy(predictions, targets):
     """
     Computes the prediction accuracy, i.e. the average of correct predictions
     of the network.
