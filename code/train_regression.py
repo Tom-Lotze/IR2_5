@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-03 18:11
+# @Last Modified time: 2020-10-05 17:16
 
 
 import argparse
@@ -159,8 +159,8 @@ def eval_on_test(nn, loss_function, dl, device):
     with torch.no_grad():
         losses = []
         for (x, y) in dl:
-            x = x.to(device)
-            y = y.to(device)
+            x = x.reshape(x.shape[0], -1).to(device)
+            y = y.reshape(y.shape[0], -1).to(device)
 
             test_pred = nn(x).to(device)
 
