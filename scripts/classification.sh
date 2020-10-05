@@ -16,7 +16,7 @@ mkdir -p Images
 
 echo "Classification started running" | mail $USER
 
-python code/train_classifier.py --nr_epochs 15 --weightdecay 0.0001 --optimizer Adam --amsgrad 1
+python code/train_classifier.py --nr_epochs 150 --weightdecay 0.0001 --optimizer Adam --amsgrad 1
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
