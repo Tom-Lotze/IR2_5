@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 10:22
+# @Last Modified time: 2020-10-05 17:06
 
 
 import argparse
@@ -27,6 +27,35 @@ DATA_DIR_DEFAULT = "dataloader/"
 FLAGS = None
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+
+
+def accuracy(predictions, targets):
+    """
+    Computes the prediction accuracy, i.e. the average of correct predictions
+    of the network.
+
+    Args:
+    predictions: 2D float array of size [batch_size, n_classes]
+    labels: 2D int array of size [batch_size, n_classes]
+            with one-hot encoding. Ground truth labels for
+            each sample in the batch
+    Returns:
+    accuracy: scalar float, the accuracy of predictions,
+              i.e. the average correct predictions over the whole batch
+    """
+
+
+    predictions_np = predictions.cpu().detach().numpy()
+    targets_np = targets.cpu().detach().numpy()
+
+    prediction_labels = np.argmax(predictions_np, axis=1)
+    accuracy = np.mean(prediction_labels == targets)
+
+    return accuracy
+
+
+
 
 def train():
     """
@@ -130,8 +159,12 @@ def train():
             # update the weights
             optimizer.step()
 
+
             # save training loss
             batch_losses.append(loss.item())
+            print("batch loss", loss.item())
+            print(f"accuracy: {get_accuracy(pred, y)}")
+
 
 
         avg_epoch_loss = np.mean(batch_losses)
@@ -185,7 +218,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
     plt.title('Losses over training, including final test loss')
 
-    plt.ylim(0, 10)
+    # plt.ylim(0, 10)
 
     plt.xlabel('Epoch')
     plt.ylabel('MSE Loss')
