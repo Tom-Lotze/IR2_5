@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 10:17
+# @Last Modified time: 2020-10-05 10:22
 
 
 import argparse
@@ -78,7 +78,8 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Classification(5376, dnn_hidden_units, 11, dropout_percentages, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+
+    nn = Classification(5376, dnn_hidden_units, dropout_percentages, 11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
 
 

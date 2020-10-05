@@ -5,7 +5,6 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=40:00:00
 #SBATCH --partition=gpu_shared_course
-#SBATCH --gres=gpu:0
 
 module load pre2019
 module load Miniconda3

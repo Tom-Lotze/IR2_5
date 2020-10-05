@@ -137,5 +137,8 @@ Literature/Aliannejadi_2019_ClarifyingQuestions_ANNOTATED.pdf
 # CUSTOM
 Data/
 *.DS_Store
+dataloader/
 
 code/.vscode/
+dataloader/
+.vscode/
