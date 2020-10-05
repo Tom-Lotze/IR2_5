@@ -61,7 +61,7 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device :", device)
 
-     # extract all data and divide into train, valid and split dataloaders
+    # extract all data and divide into train, valid and split dataloaders
     with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") as f:
         dataset = pkl.load(f)
 

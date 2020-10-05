@@ -18,7 +18,7 @@ class RankDataSet(Dataset):
         """
         Overwrite of the get_item function to return a batch through a Dataloader
         """
-        # TODO
+        # TODO concat all the datapoints
         indices = self.dataset.ranges[index]
         labels = self.dataset.engagement_lvls[indices]
 
