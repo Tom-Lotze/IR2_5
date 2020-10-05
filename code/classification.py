@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 09:46
+# @Last Modified time: 2020-10-05 10:23
 
 import torch
 import torch.nn as nn
@@ -47,7 +47,8 @@ class Classification(nn.Module):
 
 
         n_inputs = nr_nodes
-    layer_list += [nn.Linear(n_inputs, n_classes), nn.Softmax(dim=0)]
+    # removed the softmax, since it is in the cross entropy loss
+    layer_list += [nn.Linear(n_inputs, n_classes)]
 
     self.layers = nn.ModuleList(layer_list)
 
