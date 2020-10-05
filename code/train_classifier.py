@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-04 13:30
+# @Last Modified time: 2020-10-05 10:17
 
 
 import argparse
@@ -78,7 +78,7 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Classification(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = Classification(5376, dnn_hidden_units, 11, dropout_percentages, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
 
 
@@ -123,7 +123,7 @@ def train():
             pred = nn(x).to(device)
 
             # compute loss and backpropagate
-            loss = loss_function(pred, torch.max(y, 1)[1])
+            loss = loss_function(pred, y)
             loss.backward()
 
             # update the weights
@@ -164,7 +164,7 @@ def eval_on_test(nn, loss_function, dl, device):
 
             test_pred = nn(x).to(device)
 
-            loss = loss_function(test_pred, torch.max(y, 1)[1])
+            loss = loss_function(test_pred, y)
             losses.append(loss.item())
 
     return np.mean(losses)

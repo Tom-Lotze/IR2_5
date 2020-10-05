@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-04 13:15
+# @Last Modified time: 2020-10-05 09:46
 
 import torch
 import torch.nn as nn
@@ -17,7 +17,7 @@ class Classification(nn.Module):
   Once initialized an Classification object can perform forward.
   """
 
-  def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=10, neg_slope=0.02, batchnorm=False):
+  def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=11, neg_slope=0.02, batchnorm=False):
     """
     Initializes Classification object.
 
