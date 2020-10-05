@@ -26,6 +26,9 @@ class RankNet(nn.Module):
     """
 
     super(RankNet, self).__init__()
+
+    assert len(dropout_percentages) == len(n_hidden)
+    
     layer_list = []
     if n_hidden:
       for nr_nodes, drop_perc in zip(n_hidden, dropout_percentages):
