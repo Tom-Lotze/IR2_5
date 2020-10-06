@@ -178,6 +178,7 @@ def eval_on_test(nn, loss_function, dl, device):
     nn.to(device)
     with torch.no_grad():
         losses = []
+        accs = []
         for (x, y) in dl:
             x = x.to(device)
             y = y.long().squeeze().to(device)
