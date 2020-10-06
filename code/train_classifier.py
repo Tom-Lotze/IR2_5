@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-06 14:48
+# @Last Modified time: 2020-10-06 15:53
 
 
 import argparse
@@ -127,8 +127,8 @@ def train():
     for epoch in range(FLAGS.nr_epochs):
 
         print(f"\nEpoch: {epoch}")
-        batch_losses = []
-        batch_accs = []
+        # batch_losses = []
+        # batch_accs = []
         nn.train()
 
         for batch, (x, y) in enumerate(train_dl):
@@ -150,23 +150,26 @@ def train():
             optimizer.step()
 
             # save training loss
-            batch_losses.append(loss.item())
+            training_losses.append(loss.item())
             acc = get_accuracy(pred, y)
-            batch_accs.append(acc)
+            training_accs.append(acc)
+
+            # get loss on validation set and evaluate
+            if batch % FLAGS.eval_freq == 0:
+                valid_loss, valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
+                valid_losses.append(valid_loss)
+                valid_accs.append(valid_acc)
 
             print("batch loss", loss.item())
             print(f"accuracy: {acc}")
 
-        avg_epoch_acc = np.mean(batch_accs)
-        avg_epoch_loss = np.mean(batch_losses)
-        training_losses.append(avg_epoch_loss)
-        training_accs.append(avg_epoch_acc)
-        print(f"Average batch loss & accuracy (epoch {epoch}): {avg_epoch_loss}, {avg_epoch_acc} ({len(batch_losses)} batches).")
+        # avg_epoch_acc = np.mean(batch_accs)
+        # avg_epoch_loss = np.mean(batch_losses)
+        # training_losses.append(avg_epoch_loss)
+        # training_accs.append(avg_epoch_acc)
+        # print(f"Average batch loss & accuracy (epoch {epoch}): {avg_epoch_loss}, {avg_epoch_acc} ({len(batch_losses)} batches).")
 
-        # get loss on validation set and evaluate
-        valid_loss, valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
-        valid_losses.append(valid_loss)
-        valid_accs.append(valid_acc)
+
         torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
 
 
@@ -174,7 +177,7 @@ def train():
     test_loss, test_acc = eval_on_test(nn, loss_function, test_dl, device)
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
-    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string)
+    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, FLAGS)
 
 
 
@@ -201,35 +204,36 @@ def eval_on_test(nn, loss_function, dl, device):
     return np.mean(losses), np.mean(accs)
 
 
-def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string):
+def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
 
     plt.figure(figsize=(20, 12))
-    steps_all = np.arange(1, len(train_losses)+1)
+    steps_all = np.arange(0, len(train_losses))
+    steps_valid = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
 
     # plot the losses
     plt.subplot(2, 1, 1)
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
-    plt.plot(steps_all, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
+    plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
+    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
     plt.title('Losses over training')
 
     # plt.ylim(0, 10)
 
-    plt.xlabel('Epoch')
+    plt.xlabel('Batch')
     plt.ylabel('Cross Entropy Loss')
     plt.grid(True)
     plt.legend()
 
     plt.subplot(2, 1, 2)
     plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
-    plt.plot(steps_all, valid_accs, '-', lw=2, label="Validation accuracy")
-    plt.hlines(test_acc, 1, max(steps_all), label="Test accuracy")
+    plt.plot(steps_valid, valid_accs, '-', lw=2, label="Validation accuracy")
+    plt.hlines(test_acc, 0, max(steps_all), label="Test accuracy")
     plt.title('Accuracy over training')
 
-    plt.xlabel('Epoch')
+    plt.xlabel('Batch')
     plt.ylabel('Accuracy')
     plt.grid(True)
     plt.legend()
