@@ -120,6 +120,7 @@ def train():
 
         print(f"\nEpoch: {epoch}")
         batch_losses = []
+        batch_accs = []
         nn.train()
 
         for batch, (x, y) in enumerate(train_dl):
@@ -143,7 +144,7 @@ def train():
             # save training loss
             batch_losses.append(loss.item())
             acc = get_accuracy(pred, y)
-            batch_accs.append(acc)
+            batch_accs.append(acc) 
 
             print("batch loss", loss.item())
             print(f"accuracy: {acc}")
@@ -185,7 +186,7 @@ def eval_on_test(nn, loss_function, dl, device):
 
             loss = loss_function(test_pred, y)
             acc = get_accuracy(test_pred, y)
-            losses.append(loss.item())a
+            losses.append(loss.item())
             accs.append(acc)
 
     return np.mean(losses), np.mean(accs)
