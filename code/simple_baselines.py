@@ -1,6 +1,7 @@
 import csv
 import argparse
 import torch
+from collections import Counter
 
 FLAGS = None
 
@@ -15,6 +16,8 @@ def run():
         for line in tsvreader:
             engagement_lvls.append(float(line[8]))
 
+    for key, value in Counter(engagement_lvls).items():
+        print(f"{key}: {value}")
     engagement_lvls = torch.tensor(engagement_lvls)
     mean = torch.full_like(engagement_lvls, torch.mean(engagement_lvls))
     median = torch.full_like(engagement_lvls, torch.median(engagement_lvls))
