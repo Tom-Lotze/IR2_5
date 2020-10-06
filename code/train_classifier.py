@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-06 14:05
+# @Last Modified time: 2020-10-06 14:48
 
 
 import argparse
@@ -115,6 +115,14 @@ def train():
     # construct name for saving models and figures
     variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_percentages}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
+    initial_train_loss, initial_train_acc = eval_on_test(nn, loss_function, train_dl, device)
+    training_losses.append(initial_train_loss)
+    train_accs.append(initial_train_acc)
+
+    initial_val_loss, initial_val_acc = eval_on_test(nn, loss_function, valid_dl, device)
+    valid_losses.append(initial_valid_loss)
+    valid_accs.append(initial_valid_acc)
+
     # training loop
     for epoch in range(FLAGS.nr_epochs):
 
@@ -144,7 +152,7 @@ def train():
             # save training loss
             batch_losses.append(loss.item())
             acc = get_accuracy(pred, y)
-            batch_accs.append(acc) 
+            batch_accs.append(acc)
 
             print("batch loss", loss.item())
             print(f"accuracy: {acc}")
