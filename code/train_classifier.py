@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 17:14
+# @Last Modified time: 2020-10-06 14:05
 
 
 import argparse
@@ -28,34 +28,12 @@ FLAGS = None
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+def get_accuracy(pred, y):
+    with torch.no_grad():
+        B = pred.shape[0]
+        max_index = pred.max(dim = 1)[1]
 
-
-def get_accuracy(predictions, targets):
-    """
-    Computes the prediction accuracy, i.e. the average of correct predictions
-    of the network.
-
-    Args:
-    predictions: 2D float array of size [batch_size, n_classes]
-    labels: 2D int array of size [batch_size, n_classes]
-            with one-hot encoding. Ground truth labels for
-            each sample in the batch
-    Returns:
-    accuracy: scalar float, the accuracy of predictions,
-              i.e. the average correct predictions over the whole batch
-    """
-
-
-    predictions_np = predictions.cpu().detach().numpy()
-    targets_np = targets.cpu().detach().numpy()
-
-    prediction_labels = np.argmax(predictions_np, axis=1)
-    print("prediction labels shape", prediction_labels.shape)
-    accuracy = np.mean(prediction_labels == targets)
-
-    return accuracy
-
-
+    return (max_index == y).sum().item() / B
 
 
 def train():
@@ -130,7 +108,9 @@ def train():
 
     # initialization for plotting and metrics
     training_losses = []
+    training_accs = []
     valid_losses = []
+    valid_accs = []
 
     # construct name for saving models and figures
     variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_percentages}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
@@ -160,31 +140,32 @@ def train():
             # update the weights
             optimizer.step()
 
-
             # save training loss
             batch_losses.append(loss.item())
+            acc = get_accuracy(pred, y)
+            batch_accs.append(acc)
+
             print("batch loss", loss.item())
-            max_index = pred.max(dim = 1)[1]
-            print("new way", (max_index == y).sum())
-            print(pred.shape, pred)
-            print(y.shape, y)
-            print(f"accuracy: {get_accuracy(pred, y)}")
+            print(f"accuracy: {acc}")
 
-
+        avg_epoch_acc = np.mean(batch_accs)
         avg_epoch_loss = np.mean(batch_losses)
         training_losses.append(avg_epoch_loss)
-        print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
+        training_accs.append(avg_epoch_acc)
+        print(f"Average batch loss & accuracy (epoch {epoch}): {avg_epoch_loss}, {avg_epoch_acc} ({len(batch_losses)} batches).")
 
         # get loss on validation set and evaluate
-        valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
+        valid_loss, valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
+        valid_losses.append(valid_loss)
+        valid_accs.append(valid_acc)
         torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
 
 
     # compute loss and accuracy on the test set
-    test_loss = eval_on_test(nn, loss_function, test_dl, device)
-    print(f"Loss on test set: {test_loss}")
+    test_loss, test_acc = eval_on_test(nn, loss_function, test_dl, device)
+    print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
-    plotting(training_losses, valid_losses, test_loss, variables_string)
+    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string)
 
 
 
@@ -203,12 +184,14 @@ def eval_on_test(nn, loss_function, dl, device):
             test_pred = nn(x).to(device)
 
             loss = loss_function(test_pred, y)
-            losses.append(loss.item())
+            acc = get_accuracy(test_pred, y)
+            losses.append(loss.item())a
+            accs.append(acc)
 
-    return np.mean(losses)
+    return np.mean(losses), np.mean(accs)
 
 
-def plotting(train_losses, valid_losses, test_loss, variables_string):
+def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -217,10 +200,11 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     steps_all = np.arange(1, len(train_losses)+1)
 
     # plot the losses
+    plt.subplot(2, 1, 1)
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_all, valid_losses, '-', lw=2, label="Validation loss")
     plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
-    plt.title('Losses over training, including final test loss')
+    plt.title('Losses over training')
 
     # plt.ylim(0, 10)
 
@@ -229,9 +213,20 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     plt.grid(True)
     plt.legend()
 
+    plt.subplot(2, 1, 2)
+    plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
+    plt.plot(steps_all, valid_accs, '-', lw=2, label="Validation accuracy")
+    plt.hlines(test_acc, 1, max(steps_all), label="Test accuracy")
+    plt.title('Accuracy over training')
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
+    plt.legend()
+
     plt.tight_layout()
 
-    fig_name = f"classification_loss_plot_{variables_string}.png"
+    fig_name = f"classification_loss_acc_plot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
