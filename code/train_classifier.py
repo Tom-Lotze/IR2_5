@@ -50,6 +50,7 @@ def get_accuracy(predictions, targets):
     targets_np = targets.cpu().detach().numpy()
 
     prediction_labels = np.argmax(predictions_np, axis=1)
+    print("prediction labels shape", prediction_labels.shape)
     accuracy = np.mean(prediction_labels == targets)
 
     return accuracy
@@ -163,8 +164,11 @@ def train():
             # save training loss
             batch_losses.append(loss.item())
             print("batch loss", loss.item())
+            max_index = pred.max(dim = 1)[1]
+            print("new way", (max_index == y).sum())
+            print(pred.shape, pred)
+            print(y.shape, y)
             print(f"accuracy: {get_accuracy(pred, y)}")
-
 
 
         avg_epoch_loss = np.mean(batch_losses)
@@ -221,7 +225,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     # plt.ylim(0, 10)
 
     plt.xlabel('Epoch')
-    plt.ylabel('MSE Loss')
+    plt.ylabel('Cross Entropy Loss')
     plt.grid(True)
     plt.legend()
 
