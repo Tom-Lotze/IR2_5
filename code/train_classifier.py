@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-06 15:54
+# @Last Modified time: 2020-10-06 16:19
 
 
 import argparse
@@ -28,12 +28,15 @@ FLAGS = None
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-def get_accuracy(pred, y):
+def get_accuracy(pred, y, verbose=False):
     with torch.no_grad():
         B = pred.shape[0]
         max_index = pred.max(dim = 1)[1]
+        if verbose:
+            print(max_index)
+        count = (max_index == y).sum().item()
 
-    return (max_index == y).sum().item() / B
+    return count / B
 
 
 def train():
@@ -174,14 +177,14 @@ def train():
 
 
     # compute loss and accuracy on the test set
-    test_loss, test_acc = eval_on_test(nn, loss_function, test_dl, device)
+    test_loss, test_acc = eval_on_test(nn, loss_function, test_dl, device, True)
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
     plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, FLAGS)
 
 
 
-def eval_on_test(nn, loss_function, dl, device):
+def eval_on_test(nn, loss_function, dl, device, verbose=False):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
@@ -196,8 +199,10 @@ def eval_on_test(nn, loss_function, dl, device):
 
             test_pred = nn(x).to(device)
 
+
+
             loss = loss_function(test_pred, y)
-            acc = get_accuracy(test_pred, y)
+            acc = get_accuracy(test_pred, y, verbose)
             losses.append(loss.item())
             accs.append(acc)
 
