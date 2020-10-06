@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-06 15:53
+# @Last Modified time: 2020-10-06 15:54
 
 
 import argparse
@@ -117,9 +117,9 @@ def train():
 
     initial_train_loss, initial_train_acc = eval_on_test(nn, loss_function, train_dl, device)
     training_losses.append(initial_train_loss)
-    train_accs.append(initial_train_acc)
+    training_accs.append(initial_train_acc)
 
-    initial_val_loss, initial_val_acc = eval_on_test(nn, loss_function, valid_dl, device)
+    initial_valid_loss, initial_valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
     valid_losses.append(initial_valid_loss)
     valid_accs.append(initial_valid_acc)
 
