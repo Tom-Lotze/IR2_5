@@ -65,22 +65,34 @@ def load():
     engagement_lvls = []
     click_probs = []
 
+    np.random.seed(42)
+
     # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
         raise OSError(f"Folder {FLAGS.folder} does not exist")
     if not os.path.exists(FLAGS.folder+FLAGS.filename):
         raise OSError(f"File {FLAGS.folder+FLAGS.filename} does not exist")
 
+    len_file = 0
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
+
+        len_file = sum(1 for row in tsvreader)
+
+    with open(FLAGS.folder+FLAGS.filename) as tsvfile:
+        tsvreader = csv.reader(tsvfile, delimiter="\t")
+        next(tsvreader, None)
+
         for line in tsvreader:
-            queries.append(line[0])
-            questions.append(line[1])
-            answers.extend([line[i] for i in range(2, 7)])
-            impression_lvls.append(line[7])
-            engagement_lvls.append(line[8])
-            click_probs.extend([line[i] for i in range(9, 14)])
+            eps = np.random.uniform()
+            if not FLAGS.balance or (int(line[8]) != 0 or eps < (8000 / len_file)):
+                queries.append(line[0])
+                questions.append(line[1])
+                answers.extend([line[i] for i in range(2, 7)])
+                impression_lvls.append(line[7])
+                engagement_lvls.append(int(line[8]))
+                click_probs.extend([float(line[i]) for i in range(9, 14)])
 
     # set language model
     embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
@@ -137,6 +149,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--old', type=bool, default=False, 
                         help='Return the old type of datastructure')
+    parser.add_argument('--balance', type=bool, default=True, 
+                        help='Balance the data by fixing the distributions')
     parser.add_argument('--folder', type=str, default='Data/', 
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",

@@ -2,6 +2,7 @@ import csv
 import argparse
 import torch
 from collections import Counter
+import numpy as np
 
 FLAGS = None
 
@@ -9,12 +10,24 @@ def run():
     """
     Run the simplest of baselines for the engagement_lvls
     """
+    np.random.seed(42)
+
     engagement_lvls = []
+    len_file = 0
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
+
+        len_file = sum(1 for row in tsvreader)
+
+    with open(FLAGS.folder+FLAGS.filename) as tsvfile:
+        tsvreader = csv.reader(tsvfile, delimiter="\t")
+        next(tsvreader, None)
+        
         for line in tsvreader:
-            engagement_lvls.append(float(line[8]))
+            eps = np.random.uniform()
+            if not FLAGS.balance or (int(line[8]) != 0 or eps < (8000 / len_file)):
+                engagement_lvls.append(float(line[8]))
 
     for key, value in Counter(engagement_lvls).items():
         print(f"{key}: {value}")
@@ -48,7 +61,8 @@ if __name__ == "__main__":
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    
+    parser.add_argument('--balance', type=bool, default=True, 
+                        help='Balance the data by fixing the distributions')
     FLAGS, unparsed = parser.parse_known_args()
 
     run()
