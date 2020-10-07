@@ -78,7 +78,7 @@ def load():
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
 
-        len_file = sum(1 for row in tsvreader)
+        len_file = sum(1 for row in tsvreader if int(row[8])==0)
 
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
