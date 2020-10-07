@@ -10,7 +10,7 @@ def run():
     """
     Run the simplest of baselines for the engagement_lvls
     """
-    np.random.seed(42)
+    np.random.seed(40)
 
     engagement_lvls = []
     len_file = 0
@@ -18,12 +18,14 @@ def run():
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
 
-        len_file = sum(1 for row in tsvreader)
+        len_file = sum(1 for row in tsvreader if int(row[8])==0)
+
+    print(len_file)
 
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
-        
+
         for line in tsvreader:
             eps = np.random.uniform()
             if not FLAGS.balance or (int(line[8]) != 0 or eps < (8000 / len_file)):
