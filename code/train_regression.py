@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 11:57
+# @Last Modified time: 2020-10-08 12:09
 
 
 import argparse
@@ -143,14 +143,14 @@ def train():
 
 
     # compute loss and accuracy on the test set
-    test_loss = eval_on_test(nn, loss_function, test_dl, device)
+    test_loss = eval_on_test(nn, loss_function, test_dl, device, verbose=True)
     print(f"Loss on test set: {test_loss}")
 
     plotting(training_losses, valid_losses, test_loss, variables_string)
 
 
 
-def eval_on_test(nn, loss_function, dl, device):
+def eval_on_test(nn, loss_function, dl, device, verbose=False):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
@@ -166,6 +166,9 @@ def eval_on_test(nn, loss_function, dl, device):
 
             loss = loss_function(test_pred, y)
             losses.append(loss.item())
+
+            if verbose:
+                print(test_pred)
 
     return np.mean(losses)
 
@@ -210,9 +213,6 @@ def main():
     # Print all Flags to confirm parameter settings
     print("Training regression with following parameters:")
     print_flags()
-
-    # if not os.path.exists(FLAGS.data_dir):
-    # os.makedirs(FLAGS.data_dir)
 
     # Run the training operation
     train()
