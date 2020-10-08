@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-06 16:19
+# @Last Modified time: 2020-10-08 12:08
 
 
 import argparse
@@ -262,9 +262,6 @@ def main():
     # Print all Flags to confirm parameter settings
     print("Training classification")
     print_flags()
-
-    # if not os.path.exists(FLAGS.data_dir):
-    # os.makedirs(FLAGS.data_dir)
 
     # Run the training operation
     train()
