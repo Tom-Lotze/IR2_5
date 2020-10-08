@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 12:09
+# @Last Modified time: 2020-10-08 12:13
 
 
 import argparse
@@ -187,7 +187,6 @@ def plotting(train_losses, valid_losses, test_loss, variables_string):
     plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
     plt.title('Losses over training, including final test loss')
 
-    plt.ylim(0, 10)
 
     plt.xlabel('Epoch')
     plt.ylabel('MSE Loss')
