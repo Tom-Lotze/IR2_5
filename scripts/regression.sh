@@ -15,8 +15,8 @@ mkdir -p Images
 
 echo "Regression started running" | mail $USER
 
-python code/test_cuda_print.py
-python code/train_regression.py --nr_epochs 100 --weightdecay 0.0001 --optimizer Adam --amsgrad 1
+python code/train_regression.py --nr_epochs 100 --weightdecay 0.0001 \
+    --optimizer Adam --amsgrad 1 --batchnorm 1 --dropout_probs "0.3, 0.05"
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/

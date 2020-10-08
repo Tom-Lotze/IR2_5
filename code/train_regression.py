@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-05 17:16
+# @Last Modified time: 2020-10-08 11:57
 
 
 import argparse
@@ -16,10 +16,10 @@ import pickle as pkl
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
-DROPOUT_DEFAULT = '0, 0, 0'
+DROPOUT_DEFAULT = '0.0, 0.0'
 LEARNING_RATE_DEFAULT = 1e-3
 NR_EPOCHS_DEFAULT = 500
-BATCH_SIZE_DEFAULT = 200
+BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "dataloader/"
@@ -46,17 +46,17 @@ def train():
         dnn_hidden_units = []
 
     # convert dropout percentages
-    dropout_percentages = [int(perc) for perc in FLAGS.dropout_percentages.split(',')]
+    dropout_probs = [float(prob) for prob in FLAGS.dropout_probs.split(',')]
 
     # check if length of dropout is equal to nr of hidden layers
-    if len(dropout_percentages) != len(dnn_hidden_units):
-        dropout_len = len(dropout_percentages)
+    if len(dropout_probs) != len(dnn_hidden_units):
+        dropout_len = len(dropout_probs)
         hidden_len = len(dnn_hidden_units)
         if dropout_len < hidden_len:
             for _ in range(hidden_len-dropout_len):
-                dropout_percentages.append(0)
+                dropout_probs.append(0)
         else:
-            dropout_percentages = dropout_percentages[:hidden_len]
+            dropout_probs = dropout_probs[:hidden_len]
     # use GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device :", device)
@@ -72,13 +72,13 @@ def train():
     splits = [train_len, valid_len, test_len]
     train_data, valid_data, test_data = random_split(dataset, splits)
 
-    train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
-    valid_dl = DataLoader(valid_data, batch_size=64, shuffle=True, drop_last=True)
-    test_dl = DataLoader(test_data, batch_size=64, shuffle=True, drop_last=True)
+    train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True)
+    valid_dl = DataLoader(valid_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
+    test_dl = DataLoader(test_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
 
@@ -102,7 +102,7 @@ def train():
     valid_losses = []
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_percentages}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     # training loop
     for epoch in range(FLAGS.nr_epochs):
@@ -208,6 +208,7 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
+    print("Training regression with following parameters:")
     print_flags()
 
     # if not os.path.exists(FLAGS.data_dir):
@@ -221,8 +222,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
       help='Comma separated list of number of units in each hidden layer')
-    parser.add_argument('--dropout_percentages', type = str, default = DROPOUT_DEFAULT,
-      help='Comma separated list of number of units in each hidden layer')
+    parser.add_argument('--dropout_probs', type = str, default = DROPOUT_DEFAULT,
+      help='Comma separated list of dropout probabilities in each layer')
     parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
       help='Learning rate')
     parser.add_argument('--nr_epochs', type = int, default = NR_EPOCHS_DEFAULT,
