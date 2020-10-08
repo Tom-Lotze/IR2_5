@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 12:13
+# @Last Modified time: 2020-10-08 12:16
 
 
 import argparse
@@ -26,7 +26,7 @@ DATA_DIR_DEFAULT = "dataloader/"
 
 FLAGS = None
 
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+# os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 def train():
     """
