@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 12:16
+# @Last Modified time: 2020-10-08 14:47
 
 
 import argparse
@@ -34,10 +34,11 @@ def train():
     """
     print("Training started")
     # Set the random seeds for reproducibility
-    np.random.seed(42)
-    torch.manual_seed(42)
+    np.random.seed(10)
+    torch.manual_seed(10)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
+
     # Get number of units in each hidden layer
     if FLAGS.dnn_hidden_units:
         dnn_hidden_units = FLAGS.dnn_hidden_units.split(",")
@@ -80,6 +81,8 @@ def train():
      # initialize MLP and loss function
     nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
+
+    print(f"neural net:\n {[param.data for param in nn.parameters()]}")
 
 
     # initialize optimizer
@@ -155,6 +158,9 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     Find the accuracy and loss on the test set, given the current weights
     """
     nn.eval()
+    if verbose:
+        print(f"neural net:\n {[param.data for param in nn.parameters()]}")
+
     nn.to(device)
     with torch.no_grad():
         losses = []
@@ -162,7 +168,7 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
-            test_pred = nn(x).to(device)
+            test_pred = nn(x).to(device).reshape(y.shape[0], -1)
 
             loss = loss_function(test_pred, y)
             losses.append(loss.item())
