@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:15
+# @Last Modified time: 2020-10-09 14:17
 
 
 import argparse
@@ -122,7 +122,7 @@ def train():
             y = y.reshape(y.shape[0], -1).to(device)
 
             print(f"y dimensions {y.shape}")
-            print(f"y squeeze dimensions {y.squeeze.shape}")
+            print(f"y squeeze dimensions {y.squeeze().shape}")
 
 
             optimizer.zero_grad()
