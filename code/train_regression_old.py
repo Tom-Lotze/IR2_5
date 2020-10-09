@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:49
+# @Last Modified time: 2020-10-09 15:25
 
 
 import argparse
@@ -80,7 +80,7 @@ def train():
 
      # initialize MLP and loss function
     nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
-    loss_function = torch.nn.MSELoss(reduction='none')
+    loss_function = torch.nn.MSELoss()
 
     print(f"neural net:\n {[param.data for param in nn.parameters()]}")
 
@@ -137,7 +137,7 @@ def train():
             # save training loss
             training_losses.append(loss.item())
 
-            print(f"batch loss ({batch}): {loss.item()}")
+            # print(f"batch loss ({batch}): {loss.item()}")
 
             # get loss on validation set and evaluate
             if batch % FLAGS.eval_freq == 0:
@@ -153,10 +153,13 @@ def train():
         # valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
         torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
 
-
     # compute loss and accuracy on the test set
+    train_loss_via_evaltest = eval_on_test(nn, loss_function, train_dl, device, verbose=True)
     test_loss = eval_on_test(nn, loss_function, test_dl, device, verbose=True)
+    print(f"Loss on train set via eval test: {train_loss_via_evaltest}")
     print(f"Loss on test set: {test_loss}")
+
+
 
     plotting(training_losses, valid_losses, test_loss, variables_string, FLAGS)
 
@@ -173,7 +176,7 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     nn.to(device)
     with torch.no_grad():
         losses = []
-        for (x, y) in dl:
+        for i, (x, y) in enumerate(dl):
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
@@ -183,7 +186,7 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
 
             losses.append(loss.item())
 
-            if verbose:
+            if verbose and i == 0:
                 print(test_pred)
 
     return np.mean(losses)
