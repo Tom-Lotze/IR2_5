@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 14:47
+# @Last Modified time: 2020-10-09 13:07
 
 
 import argparse
@@ -112,9 +112,10 @@ def train():
 
         print(f"\nEpoch: {epoch}")
         batch_losses = []
-        nn.train()
+
 
         for batch, (x, y) in enumerate(train_dl):
+            nn.train()
 
             # squeeze the input, and put on device
             x = x.reshape(x.shape[0], -1).to(device)
@@ -133,15 +134,22 @@ def train():
             optimizer.step()
 
             # save training loss
-            batch_losses.append(loss.item())
+            train_losses.append(loss.item())
+
+            print(f"batch loss ({batch}): {loss.item()}")
+
+            # get loss on validation set and evaluate
+            if batch % FLAGS.eval_freq == 0:
+                valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
+                valid_losses.append(valid_loss)
 
 
-        avg_epoch_loss = np.mean(batch_losses)
-        training_losses.append(avg_epoch_loss)
-        print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
+        # avg_epoch_loss = np.mean(batch_losses)
+        # training_losses.append(avg_epoch_loss)
+        # print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
 
         # get loss on validation set and evaluate
-        valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
+        # valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
         torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
 
 
