@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:11
+# @Last Modified time: 2020-10-09 14:15
 
 
 import argparse
@@ -163,7 +163,7 @@ def train():
     test_loss = eval_on_test(nn, loss_function, test_dl, device, verbose=True)
     print(f"Loss on test set: {test_loss}")
 
-    plotting(training_losses, valid_losses, test_loss, variables_string)
+    plotting(training_losses, valid_losses, test_loss, variables_string, FLAGS)
 
 
 
@@ -193,13 +193,14 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     return np.mean(losses)
 
 
-def plotting(train_losses, valid_losses, test_loss, variables_string):
+def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
 
     plt.figure(figsize=(20, 12))
-    steps_all = np.arange(1, len(train_losses)+1)
+    steps_all = np.arange(0, len(train_losses))
+    steps_valid = np.arange(0, len(valid)) * FLAGS.eval_freq
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
