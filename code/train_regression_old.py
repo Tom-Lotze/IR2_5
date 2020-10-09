@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 13:11
+# @Last Modified time: 2020-10-09 13:32
 
 
 import argparse
@@ -127,7 +127,7 @@ def train():
             pred = nn(x).to(device)
 
             # compute loss and backpropagate
-            loss = loss_function(pred, y)
+            loss = loss_function(pred, y.squeeze())
             loss.backward()
 
             # update the weights
