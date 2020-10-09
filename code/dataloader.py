@@ -15,7 +15,7 @@ from tqdm import tqdm
 import argparse
 import os
 import itertools
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 FLAGS = None
 
@@ -67,53 +67,75 @@ def load():
 
     np.random.seed(42)
 
+    filename_dataset = f"dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_bins={FLAGS.bins}_embedder={FLAGS.embedder}.p"
+
     # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
         raise OSError(f"Folder {FLAGS.folder} does not exist")
     if not os.path.exists(FLAGS.folder+FLAGS.filename):
         raise OSError(f"File {FLAGS.folder+FLAGS.filename} does not exist")
 
-    len_file = 0
-    with open(FLAGS.folder+FLAGS.filename) as tsvfile:
-        tsvreader = csv.reader(tsvfile, delimiter="\t")
-        next(tsvreader, None)
-
-        len_file = sum(1 for row in tsvreader if int(row[8])==0)
-
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
 
         for line in tsvreader:
-            eps = np.random.uniform()
-            if not FLAGS.balance or (int(line[8]) != 0 or eps < (8000 / len_file)):
-                queries.append(line[0])
-                questions.append(line[1])
-                answers.extend([line[i] for i in range(2, 7)])
-                impression_lvls.append(line[7])
-                engagement_lvls.append(int(line[8]))
-                click_probs.extend([float(line[i]) for i in range(9, 14)])
+            if FLAGS.impression and line[7] == "low":
+                continue
+
+            queries.append(line[0])
+            questions.append(line[1])
+            answers.append([line[i] for i in range(2, 7)])
+            impression_lvls.append(line[7])
+            engagement_lvls.append(int(line[8]))
+            click_probs.append([float(line[i]) for i in range(9, 14)])
+
+    if FLAGS.balance:
+        engagement_lvls = np.array(engagement_lvls)
+        zero_indices = np.where(engagement_lvls == 0)[0]
+        non_zero_indices = np.where(engagement_lvls != 0)[0]
+        median_size = int(np.median(list(Counter(engagement_lvls).values())))
+        sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
+        indices = np.concatenate((sampled_indices, non_zero_indices))
+
+        queries = [queries[i] for i in indices]
+        questions = [questions[i] for i in indices]
+        answers = [answers[i] for i in indices]
+        impression_lvls = [impression_lvls[i] for i in indices]
+        engagement_lvls = [engagement_lvls[i] for i in indices]
+        click_probs = [click_probs[i] for i in indices]
+
+        answers = [i for sublist in answers for i in sublist]
+        click_probs = [i for sublist in click_probs for i in sublist]
 
     # set language model
-    embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
+    if FLAGS.embedder == "Bert":
+        embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
-    question_embeds = embedder.encode(questions, convert_to_tensor=False, 
-                                      show_progress_bar=True, batch_size=128, 
-                                      num_workers = 4)
+        question_embeds = embedder.encode(questions, convert_to_tensor=False, 
+                                        show_progress_bar=True, batch_size=128, 
+                                        num_workers = 4)
 
-    query_embeds = embedder.encode(queries, convert_to_tensor=False, 
-                                   show_progress_bar=True, batch_size=128, 
-                                   num_workers = 4)
-
-    answer_embeds = embedder.encode(answers, convert_to_tensor=False, 
+        query_embeds = embedder.encode(queries, convert_to_tensor=False, 
                                     show_progress_bar=True, batch_size=128, 
                                     num_workers = 4)
 
-    question_embeds = torch.from_numpy(question_embeds)
-    query_embeds = torch.from_numpy(query_embeds)
-    answer_embeds = torch.from_numpy(answer_embeds)
+        answer_embeds = embedder.encode(answers, convert_to_tensor=False, 
+                                        show_progress_bar=True, batch_size=128, 
+                                        num_workers = 4)
 
-    if FLAGS.old:
+        question_embeds = torch.from_numpy(question_embeds)
+        query_embeds = torch.from_numpy(query_embeds)
+        answer_embeds = torch.from_numpy(answer_embeds)
+
+    elif FLAGS.embedder == "TFIDF":
+        #TODO
+        raise NotImplementedError()
+    else:
+        print(f"Embedder {FLAGS.embedder} does not exist")
+        return
+
+    if  not FLAGS.expanded:
         dataset = []
 
         for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
@@ -130,7 +152,7 @@ def load():
             dataset.append((inp, engagement_lvl))
 
         # save the dataloader final time
-        with open("Data/dataset.p", "wb") as f:
+        with open(filename_dataset, "wb") as f:
             pkl.dump(dataset, f)
     else:
         answers = list(zip(*[iter(answers)]*5))
@@ -142,12 +164,12 @@ def load():
                        question_embeds, answer_embeds)
 
         # save the dataloader final time
-        with open((FLAGS.folder+FLAGS.filename).replace('tsv', 'p'), "wb") as f:
+        with open(filename_dataset, "wb") as f:
             pkl.dump(dataset, f, protocol=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--old', type=bool, default=False, 
+    parser.add_argument('--expanded', type=bool, default=False, 
                         help='Return the old type of datastructure')
     parser.add_argument('--balance', type=bool, default=True, 
                         help='Balance the data by fixing the distributions')
@@ -155,6 +177,12 @@ if __name__ == "__main__":
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
+    parser.add_argument('--impression', type=bool, default=True,
+                        help='Use only the most shown clarification panes')
+    parser.add_argument('--bins', type=int, default=11,
+                        help='Number of classes to consider')
+    parser.add_argument('--embedder', type=str, default="Bert",
+                        help='Type of embedding use to represent sentence')
     
     FLAGS, unparsed = parser.parse_known_args()
 

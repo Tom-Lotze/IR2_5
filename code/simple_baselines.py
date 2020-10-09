@@ -13,23 +13,25 @@ def run():
     np.random.seed(40)
 
     engagement_lvls = []
-    len_file = 0
-    with open(FLAGS.folder+FLAGS.filename) as tsvfile:
-        tsvreader = csv.reader(tsvfile, delimiter="\t")
-        next(tsvreader, None)
-
-        len_file = sum(1 for row in tsvreader if int(row[8])==0)
-
-    print(len_file)
-
+    
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
 
         for line in tsvreader:
-            eps = np.random.uniform()
-            if not FLAGS.balance or (int(line[8]) != 0 or eps < (8000 / len_file)):
-                engagement_lvls.append(float(line[8]))
+            if FLAGS.impression and line[7] == "low":
+                continue
+            engagement_lvls.append(float(line[8]))
+
+    if FLAGS.balance:
+        engagement_lvls = np.array(engagement_lvls)
+        zero_indices = np.where(engagement_lvls == 0)[0]
+        non_zero_indices = np.where(engagement_lvls != 0)[0]
+        median_size = int(np.median(list(Counter(engagement_lvls).values())))
+        sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
+        indices = np.concatenate((sampled_indices, non_zero_indices))
+
+        engagement_lvls = [engagement_lvls[i] for i in indices]
 
     for key, value in Counter(engagement_lvls).items():
         print(f"{key}: {value}")
@@ -65,6 +67,10 @@ if __name__ == "__main__":
                         help='Filename of the data')
     parser.add_argument('--balance', type=bool, default=True, 
                         help='Balance the data by fixing the distributions')
+    parser.add_argument('--impression', type=bool, default=True,
+                        help='Use only the most shown clarification panes')
+    parser.add_argument('--bins', type=int, default=11,
+                        help='Number of classes to consider')
     FLAGS, unparsed = parser.parse_known_args()
 
     run()
