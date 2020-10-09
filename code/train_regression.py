@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 14:47
+# @Last Modified time: 2020-10-09 13:11
 
 
 import argparse
@@ -116,7 +116,7 @@ def train():
 
         print(f"\nEpoch: {epoch}")
         batch_losses = []
-        
+
         for batch, (x, y) in enumerate(train_dl):
             # training mode
             nn.train()
@@ -138,7 +138,7 @@ def train():
             optimizer.step()
 
             # save training loss
-            train_losses.append(loss.item())
+            training_losses.append(loss.item())
 
             print("batch loss", loss.item())
 

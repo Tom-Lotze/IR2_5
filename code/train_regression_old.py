@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 13:07
+# @Last Modified time: 2020-10-09 13:11
 
 
 import argparse
@@ -134,7 +134,7 @@ def train():
             optimizer.step()
 
             # save training loss
-            train_losses.append(loss.item())
+            training_losses.append(loss.item())
 
             print(f"batch loss ({batch}): {loss.item()}")
 
