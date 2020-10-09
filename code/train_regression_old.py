@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:28
+# @Last Modified time: 2020-10-09 14:31
 
 
 import argparse
@@ -135,8 +135,8 @@ def train():
             # compute loss and backpropagate
             loss_sq = loss_function(pred, y.squeeze())
             loss = loss_function(pred, y)
-            print(f"loss squeezed: {loss_sq.item()}")
-            print(f"loss unsqueezed: {loss.item()}")
+            print(f"loss squeezed: {loss_sq.shape}")
+            print(f"loss unsqueezed: {loss.shape}")
 
             loss.backward()
 
