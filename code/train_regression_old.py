@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 13:32
+# @Last Modified time: 2020-10-09 14:11
 
 
 import argparse
@@ -121,10 +121,16 @@ def train():
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
+            print(f"y dimensions {y.shape}")
+            print(f"y squeeze dimensions {y.squeeze.shape}")
+
+
             optimizer.zero_grad()
 
             # forward pass
             pred = nn(x).to(device)
+
+            print(f"pred dimensions {pred.shape}")
 
             # compute loss and backpropagate
             loss = loss_function(pred, y.squeeze())
