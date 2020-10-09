@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 15:25
+# @Last Modified time: 2020-10-09 16:02
 
 
 import argparse
@@ -199,7 +199,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
 
     plt.figure(figsize=(20, 12))
     steps_all = np.arange(0, len(train_losses))
-    steps_valid = np.arange(0, len(valid)) * FLAGS.eval_freq
+    steps_valid = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
