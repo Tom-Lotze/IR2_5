@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:31
+# @Last Modified time: 2020-10-09 14:49
 
 
 import argparse
@@ -73,7 +73,7 @@ def train():
     splits = [train_len, valid_len, test_len]
     train_data, valid_data, test_data = random_split(dataset, splits)
 
-    train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True)
+    train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     valid_dl = DataLoader(valid_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     test_dl = DataLoader(test_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
 
@@ -121,23 +121,14 @@ def train():
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
-            print(f"y dimensions {y.shape}")
-            print(f"y squeeze dimensions {y.squeeze().shape}")
-
 
             optimizer.zero_grad()
 
             # forward pass
             pred = nn(x).to(device)
 
-            print(f"pred dimensions {pred.shape}")
-
             # compute loss and backpropagate
-            loss_sq = loss_function(pred, y.squeeze())
             loss = loss_function(pred, y)
-            print(f"loss squeezed: {loss_sq.shape}")
-            print(f"loss unsqueezed: {loss.shape}")
-
             loss.backward()
 
             # update the weights
@@ -186,9 +177,10 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
             x = x.reshape(x.shape[0], -1).to(device)
             y = y.reshape(y.shape[0], -1).to(device)
 
-            test_pred = nn(x).to(device).reshape(y.shape[0], -1)
+            test_pred = nn(x).to(device)
 
             loss = loss_function(test_pred, y)
+
             losses.append(loss.item())
 
             if verbose:
