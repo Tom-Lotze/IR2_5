@@ -80,9 +80,11 @@ def load():
         next(tsvreader, None)
 
         for line in tsvreader:
+            # Skip line if impression level was low
             if FLAGS.impression and line[7] == "low":
                 continue
-
+            
+            # Add values to the data lists
             queries.append(line[0])
             questions.append(line[1])
             answers.append([line[i] for i in range(2, 7)])
@@ -90,14 +92,21 @@ def load():
             engagement_lvls.append(int(line[8]))
             click_probs.append([float(line[i]) for i in range(9, 14)])
 
-    if FLAGS.balance:
+    # Attempt to fix class imbalance assuming 0 is to large
+    if FLAGS.balance:  
+        # Index the locations of zeros and non-zeros
         engagement_lvls = np.array(engagement_lvls)
         zero_indices = np.where(engagement_lvls == 0)[0]
         non_zero_indices = np.where(engagement_lvls != 0)[0]
+
+        # Get the median size of the engagement levels
         median_size = int(np.median(list(Counter(engagement_lvls).values())))
+
+        # Return the to be used indices
         sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
         indices = np.concatenate((sampled_indices, non_zero_indices))
 
+        # Update datalist based on indices
         queries = [queries[i] for i in indices]
         questions = [questions[i] for i in indices]
         answers = [answers[i] for i in indices]
@@ -105,6 +114,7 @@ def load():
         engagement_lvls = [engagement_lvls[i] for i in indices]
         click_probs = [click_probs[i] for i in indices]
 
+        # Flatten to load into embedder
         answers = [i for sublist in answers for i in sublist]
         click_probs = [i for sublist in click_probs for i in sublist]
 

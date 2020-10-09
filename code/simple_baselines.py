@@ -19,22 +19,31 @@ def run():
         next(tsvreader, None)
 
         for line in tsvreader:
+            # Skip line if impression level was low
             if FLAGS.impression and line[7] == "low":
                 continue
+            # Add values to the data lists
             engagement_lvls.append(float(line[8]))
 
+    # Attempt to fix class imbalance assuming 0 is to large
     if FLAGS.balance:
+        # Index the locations of zeros and non-zeros
         engagement_lvls = np.array(engagement_lvls)
         zero_indices = np.where(engagement_lvls == 0)[0]
         non_zero_indices = np.where(engagement_lvls != 0)[0]
+
+        # Get the median size of the engagement levels
         median_size = int(np.median(list(Counter(engagement_lvls).values())))
+        
+        # Return the to be used indices
         sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
         indices = np.concatenate((sampled_indices, non_zero_indices))
 
+        # Update datalist based on indices
         engagement_lvls = [engagement_lvls[i] for i in indices]
 
-    for key, value in Counter(engagement_lvls).items():
-        print(f"{key}: {value}")
+    print("Engagement levels:", Counter(engagement_lvls))
+
     engagement_lvls = torch.tensor(engagement_lvls)
     mean = torch.full_like(engagement_lvls, torch.mean(engagement_lvls))
     median = torch.full_like(engagement_lvls, torch.median(engagement_lvls))
