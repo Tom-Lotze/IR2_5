@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 14:17
+# @Last Modified time: 2020-10-09 14:28
 
 
 import argparse
@@ -80,7 +80,7 @@ def train():
 
      # initialize MLP and loss function
     nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
-    loss_function = torch.nn.MSELoss()
+    loss_function = torch.nn.MSELoss(reduction='none')
 
     print(f"neural net:\n {[param.data for param in nn.parameters()]}")
 
@@ -133,7 +133,11 @@ def train():
             print(f"pred dimensions {pred.shape}")
 
             # compute loss and backpropagate
-            loss = loss_function(pred, y.squeeze())
+            loss_sq = loss_function(pred, y.squeeze())
+            loss = loss_function(pred, y)
+            print(f"loss squeezed: {loss_sq.item()}")
+            print(f"loss unsqueezed: {loss.item()}")
+
             loss.backward()
 
             # update the weights
