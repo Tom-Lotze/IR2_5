@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:36
+# @Last Modified time: 2020-10-10 23:53
 
 
 import argparse
@@ -63,7 +63,8 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") as f:
+    dataset_filename = "dataset_filename=MIMICS-Click.tsv_expanded=True_balance=True_impression=True_bins=11_embedder=TFIDF.p"
+    with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
     len_all = len(dataset)
@@ -79,7 +80,8 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+     input_size = train_dl[0][0].shape # 5376 for BERT embeddings
+    nn = Regression(input_size, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
     print(f"neural net:\n {[param.data for param in nn.parameters()]}")
@@ -246,15 +248,16 @@ def main():
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
-      help='Comma separated list of number of units in each hidden layer')
-    parser.add_argument('--dropout_probs', type = str, default = DROPOUT_DEFAULT,
+    parser.add_argument('--dnn_hidden_units', type=str,
+        default=DNN_HIDDEN_UNITS_DEFAULT,
+        help='Comma separated list of number of units in each hidden layer')
+    parser.add_argument('--dropout_probs', type=str, default= DROPOUT_DEFAULT,
       help='Comma separated list of dropout probabilities in each layer')
-    parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
-      help='Learning rate')
-    parser.add_argument('--nr_epochs', type = int, default = NR_EPOCHS_DEFAULT,
+    parser.add_argument('--learning_rate', type=float,
+        default=LEARNING_RATE_DEFAULT, help='Learning rate')
+    parser.add_argument('--nr_epochs', type=int, default = NR_EPOCHS_DEFAULT,
       help='Number of epochs to run trainer.')
-    parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
+    parser.add_argument('--batch_size', type=int, default = BATCH_SIZE_DEFAULT,
       help='Batch size to run trainer.')
     parser.add_argument('--eval_freq', type=int, default=EVAL_FREQ_DEFAULT,
     help='Frequency of evaluation on the test set')
@@ -266,7 +269,7 @@ if __name__ == '__main__':
       help='Type of optimizer')
     parser.add_argument('--amsgrad', type=int, default=0,
                         help='Boolean: Amsgrad for Adam and Adamw')
-    parser.add_argument('--batchnorm', type=int, default=0,
+    parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
     # 0.0001 seems optimal
     parser.add_argument('--weightdecay', type=float, default=0,
