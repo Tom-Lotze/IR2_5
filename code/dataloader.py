@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 22:52
+# @Last Modified time: 2020-10-10 22:59
 
 import csv
 import torch
@@ -138,7 +138,16 @@ def load():
 
         # create the corpus: a list of string, each string is a data instance
         corpus = [" ".join([queries[i], questions[i], " ".join(answers[i*5:i*5+5])]) for i in range(len(queries))]
+
+        # this yields a sparse vector
         X = vectorizer.fit_transform(corpus)
+
+        # use code snippet from https://ray075hl.github.io/ray075hl.github.io/sparse_matrix_pytorch/ to convert to torch tensor
+        X = X.tocoo().astype(np.float32)
+        indices = torch.from_numpy(np.vstack((X.row, X.col))).long()
+        values = torch.from_numpy(X.data)
+        shape = torch.Size(X.shape)
+        X = torch.sparse_coo_tensor(indices, values, shape)
 
         dataset = []
         for i, inp in enumerate(X):
