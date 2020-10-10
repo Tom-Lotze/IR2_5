@@ -126,8 +126,8 @@ def train():
             nn.train()
 
             # squeeze the input, and put on device
-            x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).to(device)
+            x = x.to(device)
+            y = y.to(device)
 
 
             optimizer.zero_grad()
@@ -186,8 +186,8 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     with torch.no_grad():
         losses = []
         for i, (x, y) in enumerate(dl):
-            x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).to(device)
+            x = x.to(device)
+            y = y.to(device)
 
             test_pred = nn(x).to(device)
 
