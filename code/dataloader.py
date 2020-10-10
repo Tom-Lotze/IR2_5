@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 22:59
+# @Last Modified time: 2020-10-10 23:14
 
 import csv
 import torch
@@ -147,7 +147,7 @@ def load():
         indices = torch.from_numpy(np.vstack((X.row, X.col))).long()
         values = torch.from_numpy(X.data)
         shape = torch.Size(X.shape)
-        X = torch.sparse_coo_tensor(indices, values, shape)
+        X = torch.sparse_coo_tensor(indices, values, shape).to_dense()
 
         dataset = []
         for i, inp in enumerate(X):
