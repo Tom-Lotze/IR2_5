@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 16:30
+# @Last Modified time: 2020-10-10 23:07
 
 
 import argparse
@@ -104,6 +104,12 @@ def train():
     training_losses = []
     valid_losses = []
 
+    initial_train_loss = eval_on_test(nn, loss_function, train_dl, device)
+    training_losses.append(initial_train_loss)
+    initial_valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
+    valid_losses.append(initial_valid_loss)
+
+
     # construct name for saving models and figures
     variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
@@ -143,6 +149,7 @@ def train():
             if batch % FLAGS.eval_freq == 0:
                 valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
                 valid_losses.append(valid_loss)
+                print(f"Training loss: {loss.item()} / Valid loss: {valid_loss}")
 
 
         # avg_epoch_loss = np.mean(batch_losses)
@@ -204,11 +211,11 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 1, max(steps_all), label="Test loss")
+    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
     plt.title('Losses over training, including final test loss')
 
 
-    plt.xlabel('Epoch')
+    plt.xlabel('Batch')
     plt.ylabel('MSE Loss')
     plt.grid(True)
     plt.legend()
