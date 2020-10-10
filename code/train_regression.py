@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:07
+# @Last Modified time: 2020-10-10 23:36
 
 
 import argparse
@@ -22,7 +22,7 @@ NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
-DATA_DIR_DEFAULT = "dataloader/"
+DATA_DIR_DEFAULT = "Data/"
 
 FLAGS = None
 

@@ -17,9 +17,9 @@ echo "Dataloader started running" | mail $USER
 python code/dataloader.py --expanded False --balance True --impression True \
     --embedder TFIDF
 
-cp -r  $TMPDIR/IR2_5/Data/*.p $HOME/IR2_5/dataloader/
+cp -r  $TMPDIR/IR2_5/Data/*.p $HOME/IR2_5/Data/
 
 
-echo "dataloader finished" | mail $USER
+echo "dataloader finished, results copied to Data folder" | mail $USER
 
 

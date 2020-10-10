@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:14
+# @Last Modified time: 2020-10-10 23:37
 
 import csv
 import torch
@@ -68,7 +68,7 @@ def load():
 
     np.random.seed(42)
 
-    filename_dataset = f"dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_bins={FLAGS.bins}_embedder={FLAGS.embedder}.p"
+    filename_dataset = f"Data/dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_bins={FLAGS.bins}_embedder={FLAGS.embedder}.p"
 
     # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
