@@ -2,12 +2,13 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-21 18:28
+# @Last Modified time: 2020-10-10 22:42
 
 import csv
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 import copy
 import numpy as np
 import pickle as pkl
@@ -23,8 +24,8 @@ class Data():
     """
     A class to save all the preprocessed data in
     """
-    def __init__(self, queries, questions, answers, impression_lvls, 
-                 engagement_lvls, click_probs, query_embeds, question_embeds, 
+    def __init__(self, queries, questions, answers, impression_lvls,
+                 engagement_lvls, click_probs, query_embeds, question_embeds,
                  answer_embeds):
         """
         Initializes Data object with all things that will be saved.
@@ -80,6 +81,7 @@ def load():
         next(tsvreader, None)
 
         for line in tsvreader:
+            # skip the instances that have a low impression level
             if FLAGS.impression and line[7] == "low":
                 continue
 
@@ -112,16 +114,16 @@ def load():
     if FLAGS.embedder == "Bert":
         embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
-        question_embeds = embedder.encode(questions, convert_to_tensor=False, 
-                                        show_progress_bar=True, batch_size=128, 
+        question_embeds = embedder.encode(questions, convert_to_tensor=False,
+                                        show_progress_bar=True, batch_size=128,
                                         num_workers = 4)
 
-        query_embeds = embedder.encode(queries, convert_to_tensor=False, 
-                                    show_progress_bar=True, batch_size=128, 
+        query_embeds = embedder.encode(queries, convert_to_tensor=False,
+                                    show_progress_bar=True, batch_size=128,
                                     num_workers = 4)
 
-        answer_embeds = embedder.encode(answers, convert_to_tensor=False, 
-                                        show_progress_bar=True, batch_size=128, 
+        answer_embeds = embedder.encode(answers, convert_to_tensor=False,
+                                        show_progress_bar=True, batch_size=128,
                                         num_workers = 4)
 
         question_embeds = torch.from_numpy(question_embeds)
@@ -129,8 +131,24 @@ def load():
         answer_embeds = torch.from_numpy(answer_embeds)
 
     elif FLAGS.embedder == "TFIDF":
-        #TODO
-        raise NotImplementedError()
+        # initialize the vectorized
+        vectorizer = TfidfVectorizer()
+
+        # create the corpus: a list of string, each string is a data instance
+        corpus = [" ".join([queries[i], questions[i], " ".join(answers[i*5:i*5+5])]) for i in range(len(queries))]
+        X = vectorizer.fit_transform(corpus)
+
+        dataset = []
+        for i, inp in enumerate(X):
+            dataset.append((torch.Tensor(inp), torch.Tensor([int(engagement_lvls[i])]).float()))
+
+
+
+        # save the dataset
+        with open(filename_dataset, "wb") as f:
+            pkl.dump(dataset, f)
+
+
     else:
         print(f"Embedder {FLAGS.embedder} does not exist")
         return
@@ -159,8 +177,8 @@ def load():
         click_probs = list(zip(*[iter(click_probs)]*5))
         answer_embeds = answer_embeds.reshape(-1, 5)
 
-        dataset = Data(queries, questions, answers, impression_lvls, 
-                       engagement_lvls, click_probs, query_embeds, 
+        dataset = Data(queries, questions, answers, impression_lvls,
+                       engagement_lvls, click_probs, query_embeds,
                        question_embeds, answer_embeds)
 
         # save the dataloader final time
@@ -169,11 +187,11 @@ def load():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--expanded', type=bool, default=False, 
+    parser.add_argument('--expanded', type=bool, default=False,
                         help='Return the old type of datastructure')
-    parser.add_argument('--balance', type=bool, default=True, 
+    parser.add_argument('--balance', type=bool, default=True,
                         help='Balance the data by fixing the distributions')
-    parser.add_argument('--folder', type=str, default='Data/', 
+    parser.add_argument('--folder', type=str, default='Data/',
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
@@ -183,7 +201,7 @@ if __name__ == "__main__":
                         help='Number of classes to consider')
     parser.add_argument('--embedder', type=str, default="Bert",
                         help='Type of embedding use to represent sentence')
-    
+
     FLAGS, unparsed = parser.parse_known_args()
 
     load()
