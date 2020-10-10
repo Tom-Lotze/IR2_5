@@ -147,11 +147,12 @@ def load():
         indices = torch.from_numpy(np.vstack((X.row, X.col))).long()
         values = torch.from_numpy(X.data)
         shape = torch.Size(X.shape)
-        X = torch.sparse_coo_tensor(indices, values, shape).to_dense()
+        X = torch.sparse_coo_tensor(indices, values, shape)
+        print(f"shape of X: {X.shape}")
 
         dataset = []
         for i, inp in enumerate(X):
-            dataset.append((torch.Tensor(inp), torch.Tensor([int(engagement_lvls[i])]).float()))
+            dataset.append((inp, torch.Tensor([int(engagement_lvls[i])]).float()))
 
         # save the dataset
         with open(filename_dataset, "wb") as f:
