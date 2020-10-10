@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 22:42
+# @Last Modified time: 2020-10-10 22:52
 
 import csv
 import torch
@@ -78,13 +78,14 @@ def load():
 
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
+        # skip the first line (consists of labels)
         next(tsvreader, None)
 
         for line in tsvreader:
             # skip the instances that have a low impression level
             if FLAGS.impression and line[7] == "low":
                 continue
-
+            # add all attributes to lists
             queries.append(line[0])
             questions.append(line[1])
             answers.append([line[i] for i in range(2, 7)])
@@ -92,6 +93,7 @@ def load():
             engagement_lvls.append(int(line[8]))
             click_probs.append([float(line[i]) for i in range(9, 14)])
 
+    # balance the dataset based on labels if indicated
     if FLAGS.balance:
         engagement_lvls = np.array(engagement_lvls)
         zero_indices = np.where(engagement_lvls == 0)[0]
@@ -142,18 +144,33 @@ def load():
         for i, inp in enumerate(X):
             dataset.append((torch.Tensor(inp), torch.Tensor([int(engagement_lvls[i])]).float()))
 
-
-
         # save the dataset
         with open(filename_dataset, "wb") as f:
             pkl.dump(dataset, f)
+
+        return
 
 
     else:
         print(f"Embedder {FLAGS.embedder} does not exist")
         return
 
-    if  not FLAGS.expanded:
+    # either return the dataset for regression, with only questios, queries
+    # and answers, or return with all attributes
+    if FLAGS.expanded:
+        answers = list(zip(*[iter(answers)]*5))
+        click_probs = list(zip(*[iter(click_probs)]*5))
+        answer_embeds = answer_embeds.reshape(-1, 5)
+
+        dataset = Data(queries, questions, answers, impression_lvls,
+                       engagement_lvls, click_probs, query_embeds,
+                       question_embeds, answer_embeds)
+
+        # save the dataloader
+        with open(filename_dataset, "wb") as f:
+            pkl.dump(dataset, f, protocol=4)
+    # return the dataset for regression
+    else:
         dataset = []
 
         for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
@@ -169,21 +186,10 @@ def load():
             # Add the datapoint to the dataset
             dataset.append((inp, engagement_lvl))
 
-        # save the dataloader final time
+        # save the dataloader
         with open(filename_dataset, "wb") as f:
             pkl.dump(dataset, f)
-    else:
-        answers = list(zip(*[iter(answers)]*5))
-        click_probs = list(zip(*[iter(click_probs)]*5))
-        answer_embeds = answer_embeds.reshape(-1, 5)
 
-        dataset = Data(queries, questions, answers, impression_lvls,
-                       engagement_lvls, click_probs, query_embeds,
-                       question_embeds, answer_embeds)
-
-        # save the dataloader final time
-        with open(filename_dataset, "wb") as f:
-            pkl.dump(dataset, f, protocol=4)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -200,7 +206,7 @@ if __name__ == "__main__":
     parser.add_argument('--bins', type=int, default=11,
                         help='Number of classes to consider')
     parser.add_argument('--embedder', type=str, default="Bert",
-                        help='Type of embedding use to represent sentence')
+                        help='Type of embedding use to represent sentence, either Bert or TFIDF')
 
     FLAGS, unparsed = parser.parse_known_args()
 
