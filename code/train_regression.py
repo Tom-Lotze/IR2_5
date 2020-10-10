@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:53
+# @Last Modified time: 2020-10-10 23:58
 
 
 import argparse
@@ -80,7 +80,7 @@ def train():
 
 
      # initialize MLP and loss function
-     input_size = train_dl[0][0].shape # 5376 for BERT embeddings
+    input_size = iter(train_dl).next()[0].shape[1] # 5376 for BERT embeddings
     nn = Regression(input_size, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
