@@ -15,7 +15,7 @@ cd $TMPDIR/IR2_5
 echo "Dataloader started running" | mail $USER
 
 python code/test_cuda_print.py
-python code/dataloader.py
+python code/dataloader.py --old True
 
 cp -r  $TMPDIR/IR2_5/Data/*.p $HOME/IR2_5/dataloader/
 
