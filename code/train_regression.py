@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:58
+# @Last Modified time: 2020-10-11 11:25
 
 
 import argparse
@@ -63,7 +63,7 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = "dataset_filename=MIMICS-Click.tsv_expanded=True_balance=True_impression=True_bins=11_embedder=TFIDF.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=True_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -276,6 +276,10 @@ if __name__ == '__main__':
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
+    parser.add_argument('--embedder', type=str, default='Bert',
+      help='which dataset to use: TFIDF or Bert')
+
+
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
