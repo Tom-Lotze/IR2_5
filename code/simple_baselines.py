@@ -13,7 +13,7 @@ def run():
     np.random.seed(40)
 
     engagement_lvls = []
-    
+
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         next(tsvreader, None)
@@ -61,16 +61,19 @@ def run():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--folder', type=str, default='Data/', 
+    parser.add_argument('--folder', type=str, default='Data/',
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    parser.add_argument('--balance', type=bool, default=True, 
+    parser.add_argument('--balance', type=int, default=1,
                         help='Balance the data by fixing the distributions')
-    parser.add_argument('--impression', type=bool, default=True,
+    parser.add_argument('--impression', type=int, default=1,
                         help='Use only the most shown clarification panes')
     parser.add_argument('--bins', type=int, default=11,
                         help='Number of classes to consider')
     FLAGS, unparsed = parser.parse_known_args()
+
+    FLAGS.balance = bool(FLAGS.balance)
+    FLAGS.impression = bool(FLAGS.impression)
 
     run()

@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-10 23:37
+# @Last Modified time: 2020-10-11 12:04
 
 import csv
 import torch
@@ -55,7 +55,7 @@ class Data():
             indices[q].append(i)
         return list(indices.values())
 
-def load():
+def load(FLAGS):
     """
     Load all data and store it in either a list (old) or in a dataset class (new)
     """
@@ -203,15 +203,15 @@ def load():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--expanded', type=bool, default=False,
+    parser.add_argument('--expanded', type=int, default=0,
                         help='Return the old type of datastructure')
-    parser.add_argument('--balance', type=bool, default=True,
+    parser.add_argument('--balance', type=int, default=1,
                         help='Balance the data by fixing the distributions')
     parser.add_argument('--folder', type=str, default='Data/',
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    parser.add_argument('--impression', type=bool, default=True,
+    parser.add_argument('--impression', type=int, default=1,
                         help='Use only the most shown clarification panes')
     parser.add_argument('--bins', type=int, default=11,
                         help='Number of classes to consider')
@@ -219,6 +219,9 @@ if __name__ == "__main__":
                         help='Type of embedding use to represent sentence, either Bert or TFIDF')
 
     FLAGS, unparsed = parser.parse_known_args()
+    FLAGS.expanded = bool(FLAGS.expanded)
+    FLAGS.balance = bool(FLAGS.balance)
+    FLAGS.impression = bool(FLAGS.impression)
 
-    load()
+    load(FLAGS)
 
