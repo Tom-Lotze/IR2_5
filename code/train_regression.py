@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 17:00
+# @Last Modified time: 2020-10-12 17:11
 
 
 import argparse
@@ -32,7 +32,6 @@ def train():
     """
     Performs training and evaluation of Regression model.
     """
-    print("Training started")
     # Set the random seeds for reproducibility
     np.random.seed(10)
     torch.manual_seed(10)
@@ -226,7 +225,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
 
     plt.tight_layout()
 
-    fig_name = f"loss_plot_{variables_string}.png"
+    fig_name = f"Regression_loss_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
