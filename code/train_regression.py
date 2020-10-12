@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 21:13
+# @Last Modified time: 2020-10-12 21:15
 
 
 import argparse
@@ -169,7 +169,7 @@ def train():
 
     test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
 
-    print(f"Loss on test set of optimal model: {test_loss}")
+    print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
 
     plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
 
