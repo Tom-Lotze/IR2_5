@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 17:11
+# @Last Modified time: 2020-10-12 19:13
 
 
 import argparse
@@ -62,7 +62,7 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -281,6 +281,8 @@ if __name__ == '__main__':
       help='which dataset to use: TFIDF or Bert')
     parser.add_argument('--verbose', type=int, default=0,
       help='print neural net and predictions')
+    parser.add_argument('--reduced_classes', type=int, default=0,
+      help='Use only 2 class dataset')
 
 
 
@@ -288,6 +290,7 @@ if __name__ == '__main__':
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
+    FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
 
     main()
 
