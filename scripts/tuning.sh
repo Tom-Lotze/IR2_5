@@ -39,7 +39,7 @@ do
       for i in $(seq 0 "$len")
       do
         python code/train_regression.py --nr_epochs 80 --optimizer $optimizer\
-         --learning_rate "$learning_rate" --verbose 0 --embedder "$emb$"\
+         --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
          --dnn_hidden_units "${dnn[$i]}" --dropout_percentages "${dropouts[$i]}"
        done
      done
