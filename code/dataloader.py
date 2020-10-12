@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 14:36
+# @Last Modified time: 2020-10-12 15:02
 
 import csv
 import torch
@@ -168,6 +168,8 @@ def load(FLAGS):
         for i, inp in enumerate(X):
             dataset.append((inp, torch.Tensor([int(engagement_lvls[i])]).float()))
 
+        # TODO: don't return here, move towards expanded
+
         # save the dataset
         with open(filename_dataset, "wb") as f:
             pkl.dump(dataset, f)
@@ -186,6 +188,12 @@ def load(FLAGS):
         click_probs = list(zip(*[iter(click_probs)]*5))
         answer_embeds = answer_embeds.reshape(-1, 5)
 
+        # TODO
+        # if statement if TFIDF or BERT
+        # load neural net and perform forward pass on the data, yielding the predicted engagement levels
+
+
+        # all embeddings can be removed from the dataset, since forward pass is performed here
         dataset = Data(queries, questions, answers, impression_lvls,
                        engagement_lvls, click_probs, query_embeds,
                        question_embeds, answer_embeds)

@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-08 12:16
+# @Last Modified time: 2020-10-12 17:19
 
 
 import argparse
@@ -18,11 +18,11 @@ import pickle as pkl
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
 DROPOUT_DEFAULT = '0.0, 0.0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 500
+NR_EPOCHS_DEFAULT = 40
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
-DATA_DIR_DEFAULT = "dataloader/"
+DATA_DIR_DEFAULT = "Data/"
 
 FLAGS = None
 
@@ -43,10 +43,9 @@ def train():
     """
     Performs training and evaluation of Classification model.
     """
-    print("Training started")
     # Set the random seeds for reproducibility
-    np.random.seed(42)
-    torch.manual_seed(42)
+    np.random.seed(10)
+    torch.manual_seed(10)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
     # Get number of units in each hidden layer
@@ -73,7 +72,8 @@ def train():
     print("Device :", device)
 
      # extract all data and divide into train, valid and split dataloaders
-    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") as f:
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
+    with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
     len_all = len(dataset)
@@ -83,14 +83,14 @@ def train():
     splits = [train_len, valid_len, test_len]
     train_data, valid_data, test_data = random_split(dataset, splits)
 
-    train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True)
+    train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     valid_dl = DataLoader(valid_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     test_dl = DataLoader(test_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
 
 
      # initialize MLP and loss function
-
-    nn = Classification(5376, dnn_hidden_units, dropout_probs, 11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    input_size = iter(train_dl).next()[0].shape[1] # 5376 for BERT embeddings
+    nn = Classification(input_size, dnn_hidden_units, dropout_probs, 11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.CrossEntropyLoss()
 
 
@@ -116,7 +116,7 @@ def train():
     valid_accs = []
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"{FLAGS.embedder}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     initial_train_loss, initial_train_acc = eval_on_test(nn, loss_function, train_dl, device)
     training_losses.append(initial_train_loss)
@@ -125,6 +125,9 @@ def train():
     initial_valid_loss, initial_valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
     valid_losses.append(initial_valid_loss)
     valid_accs.append(initial_valid_acc)
+
+    overall_batch = 0
+    min_valid_loss = 10000
 
     # training loop
     for epoch in range(FLAGS.nr_epochs):
@@ -158,29 +161,30 @@ def train():
             training_accs.append(acc)
 
             # get loss on validation set and evaluate
-            if batch % FLAGS.eval_freq == 0:
+            if overall_batch % FLAGS.eval_freq == 0:
                 valid_loss, valid_acc = eval_on_test(nn, loss_function, valid_dl, device)
                 valid_losses.append(valid_loss)
                 valid_accs.append(valid_acc)
 
-            print("batch loss", loss.item())
-            print(f"accuracy: {acc}")
+                print(f"batch loss: {loss.item()}/ valid loss: {valid_loss}")
+                print(f"train accuracy: {acc} / valid acc: {valid_acc}")
 
-        # avg_epoch_acc = np.mean(batch_accs)
-        # avg_epoch_loss = np.mean(batch_losses)
-        # training_losses.append(avg_epoch_loss)
-        # training_accs.append(avg_epoch_acc)
-        # print(f"Average batch loss & accuracy (epoch {epoch}): {avg_epoch_loss}, {avg_epoch_acc} ({len(batch_losses)} batches).")
+                if valid_loss < min_valid_loss:
+                    print(f"Model is saved in epoch {epoch}, overall batch: {overall_batch}")
+                    torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
+                    min_valid_loss = valid_loss
+                    optimal_batch = overall_batch
 
-
-        torch.save(nn.state_dict(), f"Models/Classification_{variables_string}.pt")
+            overall_batch += 1
 
 
     # compute loss and accuracy on the test set
-    test_loss, test_acc = eval_on_test(nn, loss_function, test_dl, device, True)
+    optimal_nn = Classification(input_size, dnn_hidden_units, dropout_probs, 11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    optimal_nn.load_state_dict(torch.load(f"Models/Classification_{variables_string}.pt"))
+    test_loss, test_acc = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
-    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, FLAGS)
+    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, optimal_batch, FLAGS)
 
 
 
@@ -190,26 +194,30 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     """
     nn.eval()
     nn.to(device)
+    if verbose:
+        print(f"neural net:\n {[param.data for param in nn.parameters()]}")
+
     with torch.no_grad():
         losses = []
         accs = []
-        for (x, y) in dl:
+        for i, (x, y) in enumerate(dl):
             x = x.to(device)
             y = y.long().squeeze().to(device)
 
             test_pred = nn(x).to(device)
-
-
 
             loss = loss_function(test_pred, y)
             acc = get_accuracy(test_pred, y, verbose)
             losses.append(loss.item())
             accs.append(acc)
 
+            if verbose and i == 0:
+                print(test_pred)
+
     return np.mean(losses), np.mean(accs)
 
 
-def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, FLAGS):
+def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, optimal_batch, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -223,6 +231,7 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
     plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
+    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
     plt.title('Losses over training')
 
     # plt.ylim(0, 10)
@@ -236,6 +245,7 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
     plt.plot(steps_valid, valid_accs, '-', lw=2, label="Validation accuracy")
     plt.hlines(test_acc, 0, max(steps_all), label="Test accuracy")
+    plt.vlines(optimal_batch, np.min([np.min(train_accs), np.min(valid_accs)]), np.max([np.max(train_accs), np.max(valid_accs)]), label="Optimal model")
     plt.title('Accuracy over training')
 
     plt.xlabel('Batch')
@@ -245,13 +255,14 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
     plt.tight_layout()
 
-    fig_name = f"classification_loss_acc_plot_{variables_string}.png"
+    fig_name = f"classification_loss_acc_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
     """
     Prints all entries in FLAGS variable.
     """
+    print("Training classification with following params")
     for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
 
@@ -260,7 +271,6 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
-    print("Training classification")
     print_flags()
 
     # Run the training operation
@@ -269,15 +279,16 @@ def main():
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
-      help='Comma separated list of number of units in each hidden layer')
-    parser.add_argument('--dropout_probs', type = str, default = DROPOUT_DEFAULT,
-      help='Comma separated list of dropout probabilities for each layer')
-    parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
-      help='Learning rate')
-    parser.add_argument('--nr_epochs', type = int, default = NR_EPOCHS_DEFAULT,
+    parser.add_argument('--dnn_hidden_units', type=str,
+        default=DNN_HIDDEN_UNITS_DEFAULT,
+        help='Comma separated list of number of units in each hidden layer')
+    parser.add_argument('--dropout_probs', type=str, default= DROPOUT_DEFAULT,
+      help='Comma separated list of dropout probabilities in each layer')
+    parser.add_argument('--learning_rate', type=float,
+        default=LEARNING_RATE_DEFAULT, help='Learning rate')
+    parser.add_argument('--nr_epochs', type=int, default = NR_EPOCHS_DEFAULT,
       help='Number of epochs to run trainer.')
-    parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
+    parser.add_argument('--batch_size', type=int, default = BATCH_SIZE_DEFAULT,
       help='Batch size to run trainer.')
     parser.add_argument('--eval_freq', type=int, default=EVAL_FREQ_DEFAULT,
     help='Frequency of evaluation on the test set')
@@ -289,17 +300,24 @@ if __name__ == '__main__':
       help='Type of optimizer')
     parser.add_argument('--amsgrad', type=int, default=0,
                         help='Boolean: Amsgrad for Adam and Adamw')
-    parser.add_argument('--batchnorm', type=int, default=0,
+    parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
     # 0.0001 seems optimal
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
+    parser.add_argument('--embedder', type=str, default='Bert',
+      help='which dataset to use: TFIDF or Bert')
+    parser.add_argument('--verbose', type=int, default=0,
+      help='print neural net and predictions')
+
+
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
+    FLAGS.verbose = bool(FLAGS.verbose)
 
     main()
 
