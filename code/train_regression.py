@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 19:13
+# @Last Modified time: 2020-10-12 21:13
 
 
 import argparse
@@ -83,7 +83,8 @@ def train():
     nn = Regression(input_size, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
-    print(f"neural net:\n {[param.data for param in nn.parameters()]}")
+    if FLAGS.verbose:
+        print(f"neural net:\n {[param.data for param in nn.parameters()]}")
 
 
     # initialize optimizer
