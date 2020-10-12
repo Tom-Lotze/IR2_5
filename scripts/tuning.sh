@@ -22,23 +22,24 @@ echo "Results file" > results_tuning.txt
 
 echo "starting hyperparam tuning" | mail $USER
 
-declare -a dnn=("256, 128, 32" "2000, 100, 16" "300, 32")
-declare -a lrs=("0.001" "0.01" "0.0001")
-declare -a wd=("0.00001" "0.01")
+declare -a dnn=("2000, 100, 16" "300, 32" "248")
+declare -a lrs=("0.001" "0.0001")
+declare -a embedders=("Bert" "TFIDF")
 
-for optimizer in 'Adam' 'AdamW' 'SGD' 'RMSprop'
+
+declare len=${#dropouts[@]}
+
+for optimizer in 'Adam' 'SGD'
 do
-  echo $optimizer | mail $USER
-  for weight_decay in "${wd[@]}"
+  for emb in "${embedders[@]}"
   do
     for learning_rate in "${lrs[@]}"
     do
-      for units in "${dnn[@]}"
+      for i in $(seq 0 "$len")
       do
         python code/train_regression.py --nr_epochs 80 --optimizer $optimizer\
-         --learning_rate "$learning_rate" --amsgrad "1"\
-         --dnn_hidden_units "$units" --weightdecay "$weight_decay"\
-         >> results_tuning.txt
+         --learning_rate "$learning_rate"\
+         --dnn_hidden_units "${dnn[$i]}" --dropout_percentages "${dropouts[$i]}"\
        done
     done
   done
@@ -46,6 +47,5 @@ done
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
-cp results_tuning.txt $HOME/IR2_5/
 
 echo "Param search finished, results copied back to home" | mail $USER
