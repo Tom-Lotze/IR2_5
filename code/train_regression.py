@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-09 13:11
+# @Last Modified time: 2020-10-11 11:25
 
 
 import argparse
@@ -22,7 +22,7 @@ NR_EPOCHS_DEFAULT = 500
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
-DATA_DIR_DEFAULT = "dataloader/"
+DATA_DIR_DEFAULT = "Data/"
 
 FLAGS = None
 
@@ -63,11 +63,11 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    with open(os.path.join(FLAGS.data_dir, "dataset.p"), "rb") as f:
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=True_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
+    with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
     len_all = len(dataset)
-    print(len_all)
 
     train_len, valid_len = int(0.7 * len_all), int(0.15 * len_all)
     test_len = len_all - train_len - valid_len
@@ -80,7 +80,8 @@ def train():
 
 
      # initialize MLP and loss function
-    nn = Regression(5376, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    input_size = iter(train_dl).next()[0].shape[1] # 5376 for BERT embeddings
+    nn = Regression(input_size, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     loss_function = torch.nn.MSELoss()
 
     print(f"neural net:\n {[param.data for param in nn.parameters()]}")
@@ -107,6 +108,9 @@ def train():
 
     initial_train_loss = eval_on_test(nn, loss_function, train_dl, device)
     training_losses.append(initial_train_loss)
+    initial_valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
+    valid_losses.append(initial_valid_loss)
+
 
     # construct name for saving models and figures
     variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
@@ -117,13 +121,14 @@ def train():
         print(f"\nEpoch: {epoch}")
         batch_losses = []
 
+
         for batch, (x, y) in enumerate(train_dl):
-            # training mode
             nn.train()
 
             # squeeze the input, and put on device
-            x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).to(device)
+            x = x.to(device)
+            y = y.to(device)
+
 
             optimizer.zero_grad()
 
@@ -131,7 +136,7 @@ def train():
             pred = nn(x).to(device)
 
             # compute loss and backpropagate
-            loss = loss_function(pred, y.squeeze())
+            loss = loss_function(pred, y)
             loss.backward()
 
             # update the weights
@@ -140,23 +145,32 @@ def train():
             # save training loss
             training_losses.append(loss.item())
 
-            print("batch loss", loss.item())
+            # print(f"batch loss ({batch}): {loss.item()}")
 
             # get loss on validation set and evaluate
             if batch % FLAGS.eval_freq == 0:
                 valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
                 valid_losses.append(valid_loss)
+                print(f"Training loss: {loss.item()} / Valid loss: {valid_loss}")
 
-        # # get loss on validation set and evaluate
+
+        # avg_epoch_loss = np.mean(batch_losses)
+        # training_losses.append(avg_epoch_loss)
+        # print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
+
+        # get loss on validation set and evaluate
         # valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
         torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
 
-
     # compute loss and accuracy on the test set
+    train_loss_via_evaltest = eval_on_test(nn, loss_function, train_dl, device, verbose=True)
     test_loss = eval_on_test(nn, loss_function, test_dl, device, verbose=True)
+    print(f"Loss on train set via eval test: {train_loss_via_evaltest}")
     print(f"Loss on test set: {test_loss}")
 
-    plotting(training_losses, valid_losses, test_loss, variables_string)
+
+
+    plotting(training_losses, valid_losses, test_loss, variables_string, FLAGS)
 
 
 
@@ -168,25 +182,26 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     if verbose:
         print(f"neural net:\n {[param.data for param in nn.parameters()]}")
 
-    nn = nn.to(device)
+    nn.to(device)
     with torch.no_grad():
         losses = []
-        for (x, y) in dl:
-            x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).to(device)
+        for i, (x, y) in enumerate(dl):
+            x = x.to(device)
+            y = y.to(device)
 
-            test_pred = nn(x).to(device).reshape(y.shape[0], -1)
+            test_pred = nn(x).to(device)
 
-            loss = loss_function(test_pred, y.squeeze())
+            loss = loss_function(test_pred, y)
+
             losses.append(loss.item())
 
-            if verbose:
+            if verbose and i == 0:
                 print(test_pred)
 
     return np.mean(losses)
 
 
-def plotting(train_losses, valid_losses, test_loss, variables_string):
+def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -233,15 +248,16 @@ def main():
 if __name__ == '__main__':
     # Command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dnn_hidden_units', type = str, default = DNN_HIDDEN_UNITS_DEFAULT,
-      help='Comma separated list of number of units in each hidden layer')
-    parser.add_argument('--dropout_probs', type = str, default = DROPOUT_DEFAULT,
+    parser.add_argument('--dnn_hidden_units', type=str,
+        default=DNN_HIDDEN_UNITS_DEFAULT,
+        help='Comma separated list of number of units in each hidden layer')
+    parser.add_argument('--dropout_probs', type=str, default= DROPOUT_DEFAULT,
       help='Comma separated list of dropout probabilities in each layer')
-    parser.add_argument('--learning_rate', type = float, default = LEARNING_RATE_DEFAULT,
-      help='Learning rate')
-    parser.add_argument('--nr_epochs', type = int, default = NR_EPOCHS_DEFAULT,
+    parser.add_argument('--learning_rate', type=float,
+        default=LEARNING_RATE_DEFAULT, help='Learning rate')
+    parser.add_argument('--nr_epochs', type=int, default = NR_EPOCHS_DEFAULT,
       help='Number of epochs to run trainer.')
-    parser.add_argument('--batch_size', type = int, default = BATCH_SIZE_DEFAULT,
+    parser.add_argument('--batch_size', type=int, default = BATCH_SIZE_DEFAULT,
       help='Batch size to run trainer.')
     parser.add_argument('--eval_freq', type=int, default=EVAL_FREQ_DEFAULT,
     help='Frequency of evaluation on the test set')
@@ -253,13 +269,17 @@ if __name__ == '__main__':
       help='Type of optimizer')
     parser.add_argument('--amsgrad', type=int, default=0,
                         help='Boolean: Amsgrad for Adam and Adamw')
-    parser.add_argument('--batchnorm', type=int, default=0,
+    parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
     # 0.0001 seems optimal
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
+    parser.add_argument('--embedder', type=str, default='Bert',
+      help='which dataset to use: TFIDF or Bert')
+
+
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
