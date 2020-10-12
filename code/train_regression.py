@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 14:26
+# @Last Modified time: 2020-10-12 16:49
 
 
 import argparse
@@ -63,7 +63,7 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=True_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_bins=11_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -122,7 +122,6 @@ def train():
     for epoch in range(FLAGS.nr_epochs):
 
         print(f"\nEpoch: {epoch}")
-        batch_losses =
 
 
         for batch, (x, y) in enumerate(train_dl):
