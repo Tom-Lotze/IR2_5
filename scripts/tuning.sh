@@ -39,9 +39,9 @@ do
       do
         python code/train_regression.py --nr_epochs 80 --optimizer $optimizer\
          --learning_rate "$learning_rate"\
-         --dnn_hidden_units "${dnn[$i]}" --dropout_percentages "${dropouts[$i]}"\
+         --dnn_hidden_units "${dnn[$i]}" --dropout_percentages "${dropouts[$i]}"
        done
-    done
+     done
   done
 done
 
