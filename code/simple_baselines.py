@@ -6,11 +6,12 @@ import numpy as np
 
 FLAGS = None
 
-def run():
+def run(FLAGS):
     """
     Run the simplest of baselines for the engagement_lvls
     """
-    np.random.seed(40)
+    np.random.seed(42)
+
 
     engagement_lvls = []
 
@@ -22,6 +23,7 @@ def run():
             if FLAGS.impression and line[7] == "low":
                 continue
             engagement_lvls.append(float(line[8]))
+
 
     if FLAGS.balance:
         engagement_lvls = np.array(engagement_lvls)
@@ -36,9 +38,17 @@ def run():
     for key, value in Counter(engagement_lvls).items():
         print(f"{key}: {value}")
     engagement_lvls = torch.tensor(engagement_lvls)
-    mean = torch.full_like(engagement_lvls, torch.mean(engagement_lvls))
-    median = torch.full_like(engagement_lvls, torch.median(engagement_lvls))
-    mode = torch.full_like(engagement_lvls, torch.mode(engagement_lvls)[0])
+    mean_eng = torch.mean(engagement_lvls)
+    median_eng = torch.median(engagement_lvls)
+    mode_eng = torch.mode(engagement_lvls)[0]
+
+    print(f"mean of engagement levels: {mean_eng}")
+    print(f"median of engagement levels: {median_eng}")
+    print(f"mode of engagement levels: {mode_eng}\n")
+
+    mean = torch.full_like(engagement_lvls, mean_eng)
+    median = torch.full_like(engagement_lvls, median_eng)
+    mode = torch.full_like(engagement_lvls, mode_eng)
 
     MSE_loss = torch.nn.MSELoss()
 
@@ -76,4 +86,4 @@ if __name__ == "__main__":
     FLAGS.balance = bool(FLAGS.balance)
     FLAGS.impression = bool(FLAGS.impression)
 
-    run()
+    run(FLAGS)
