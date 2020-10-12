@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 16:49
+# @Last Modified time: 2020-10-12 17:00
 
 
 import argparse
@@ -167,7 +167,7 @@ def train():
     optimal_nn.load_state_dict(torch.load(f"Models/Regression_{variables_string}.pt"))
 
 
-    test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=True)
+    test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
 
     print(f"Loss on test set of optimal model: {test_loss}")
 
@@ -280,12 +280,15 @@ if __name__ == '__main__':
       help='momentum for optimizer')
     parser.add_argument('--embedder', type=str, default='Bert',
       help='which dataset to use: TFIDF or Bert')
+    parser.add_argument('--verbose', type=int, default=0,
+      help='print neural net and predictions')
 
 
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
+    FLAGS.verbose = bool(FLAGS.verbose)
 
     main()
 
