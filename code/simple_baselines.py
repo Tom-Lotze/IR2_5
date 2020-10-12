@@ -24,7 +24,10 @@ def run(FLAGS):
             if FLAGS.impression and line[7] == "low":
                 continue
             # Add values to the data lists
-            engagement_lvls.append(float(line[8]))
+            if FLAGS.reduced_classes:
+                engagement_lvls.append(0 if int(line[8]) == 0 else 1)
+            else:
+                engagement_lvls.append(int(line[8]))
 
     # Attempt to fix class imbalance assuming 0 is to large
     if FLAGS.balance:
@@ -34,8 +37,10 @@ def run(FLAGS):
         non_zero_indices = np.where(engagement_lvls != 0)[0]
 
         # Get the median size of the engagement levels
-        median_size = int(np.median(list(Counter(engagement_lvls).values())))
-
+        if FLAGS.reduced_classes:
+            median_size = int(Counter(engagement_lvls)[1])
+        else:
+            median_size = int(np.median(list(Counter(engagement_lvls).values())))
         # Return the to be used indices
         sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
         indices = np.concatenate((sampled_indices, non_zero_indices))
@@ -87,11 +92,12 @@ if __name__ == "__main__":
                         help='Balance the data by fixing the distributions')
     parser.add_argument('--impression', type=int, default=1,
                         help='Use only the most shown clarification panes')
-    parser.add_argument('--bins', type=int, default=11,
-                        help='Number of classes to consider')
+    parser.add_argument('--reduced_classes', type=int, default=0,
+                        help='Number of classes to consider, either 11 or 2')
     FLAGS, unparsed = parser.parse_known_args()
 
     FLAGS.balance = bool(FLAGS.balance)
     FLAGS.impression = bool(FLAGS.impression)
+    FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
 
     run(FLAGS)

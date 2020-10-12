@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-15 01:35
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-11 12:04
+# @Last Modified time: 2020-10-12 14:36
 
 import csv
 import torch
@@ -68,7 +68,7 @@ def load(FLAGS):
 
     np.random.seed(42)
 
-    filename_dataset = f"Data/dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_bins={FLAGS.bins}_embedder={FLAGS.embedder}.p"
+    filename_dataset = f"Data/dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
 
     # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
@@ -85,24 +85,30 @@ def load(FLAGS):
             # skip the instances that have a low impression level
             if FLAGS.impression and line[7] == "low":
                 continue
-            
+
             # Add values to the data lists
             queries.append(line[0])
             questions.append(line[1])
             answers.append([line[i] for i in range(2, 7)])
             impression_lvls.append(line[7])
-            engagement_lvls.append(int(line[8]))
+            if FLAGS.reduced_classes:
+                engagement_lvls.append(0 if int(line[8]) == 0 else 1)
+            else:
+                engagement_lvls.append(int(line[8]))
             click_probs.append([float(line[i]) for i in range(9, 14)])
 
     # Attempt to fix class imbalance assuming 0 is to large
-    if FLAGS.balance:  
+    if FLAGS.balance:
         # Index the locations of zeros and non-zeros
         engagement_lvls = np.array(engagement_lvls)
         zero_indices = np.where(engagement_lvls == 0)[0]
         non_zero_indices = np.where(engagement_lvls != 0)[0]
 
         # Get the median size of the engagement levels
-        median_size = int(np.median(list(Counter(engagement_lvls).values())))
+        if FLAGS.reduced_classes:
+            median_size = int(Counter(engagement_lvls)[1])
+        else:
+            median_size = int(np.median(list(Counter(engagement_lvls).values())))
 
         # Return the to be used indices
         sampled_indices = np.random.choice(zero_indices, median_size, replace=False)
@@ -221,8 +227,8 @@ if __name__ == "__main__":
                         help='Filename of the data')
     parser.add_argument('--impression', type=int, default=1,
                         help='Use only the most shown clarification panes')
-    parser.add_argument('--bins', type=int, default=11,
-                        help='Number of classes to consider')
+    parser.add_argument('--reduced_classes', type=int, default=0,
+                        help='Either consider 11 classes, or 2 (binary case)')
     parser.add_argument('--embedder', type=str, default="Bert",
                         help='Type of embedding use to represent sentence, either Bert or TFIDF')
 
@@ -230,6 +236,7 @@ if __name__ == "__main__":
     FLAGS.expanded = bool(FLAGS.expanded)
     FLAGS.balance = bool(FLAGS.balance)
     FLAGS.impression = bool(FLAGS.impression)
+    FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
 
     load(FLAGS)
 
