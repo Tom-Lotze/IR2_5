@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-11 11:25
+# @Last Modified time: 2020-10-12 14:26
 
 
 import argparse
@@ -18,7 +18,7 @@ import pickle as pkl
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
 DROPOUT_DEFAULT = '0.0, 0.0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 500
+NR_EPOCHS_DEFAULT = 40
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
@@ -113,13 +113,16 @@ def train():
 
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"{FLAGS.embedder}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+
+    overall_batch = 0
+    min_valid_loss = 10000
 
     # training loop
     for epoch in range(FLAGS.nr_epochs):
 
         print(f"\nEpoch: {epoch}")
-        batch_losses = []
+        batch_losses =
 
 
         for batch, (x, y) in enumerate(train_dl):
@@ -148,29 +151,28 @@ def train():
             # print(f"batch loss ({batch}): {loss.item()}")
 
             # get loss on validation set and evaluate
-            if batch % FLAGS.eval_freq == 0:
+            if overall_batch % FLAGS.eval_freq == 0:
                 valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
                 valid_losses.append(valid_loss)
                 print(f"Training loss: {loss.item()} / Valid loss: {valid_loss}")
+                if valid_loss < min_valid_loss:
+                    print(f"Model is saved in epoch {epoch}, overall batch: {overall_batch}")
+                    torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
+                    min_valid_loss = valid_loss
+                    optimal_batch = overall_batch
+
+            overall_batch += 1
+
+    # Load the optimal model (with loweest validation loss, and evaluate on test set)
+    optimal_nn = Regression(input_size, dnn_hidden_units, dropout_probs, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    optimal_nn.load_state_dict(torch.load(f"Models/Regression_{variables_string}.pt"))
 
 
-        # avg_epoch_loss = np.mean(batch_losses)
-        # training_losses.append(avg_epoch_loss)
-        # print(f"Average batch loss (epoch {epoch}: {avg_epoch_loss} ({len(batch_losses)} batches).")
+    test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=True)
 
-        # get loss on validation set and evaluate
-        # valid_losses.append(eval_on_test(nn, loss_function, valid_dl, device))
-        torch.save(nn.state_dict(), f"Models/Regression_{variables_string}.pt")
+    print(f"Loss on test set of optimal model: {test_loss}")
 
-    # compute loss and accuracy on the test set
-    train_loss_via_evaltest = eval_on_test(nn, loss_function, train_dl, device, verbose=True)
-    test_loss = eval_on_test(nn, loss_function, test_dl, device, verbose=True)
-    print(f"Loss on train set via eval test: {train_loss_via_evaltest}")
-    print(f"Loss on test set: {test_loss}")
-
-
-
-    plotting(training_losses, valid_losses, test_loss, variables_string, FLAGS)
+    plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
 
 
 
@@ -201,7 +203,7 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
     return np.mean(losses)
 
 
-def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
+def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -214,7 +216,8 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, FLAGS):
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
     plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
-    plt.title('Losses over training, including final test loss')
+    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
+    plt.title('Losses over training, including final test loss using optimal model')
 
 
     plt.xlabel('Batch')
