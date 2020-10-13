@@ -41,7 +41,8 @@ do
       do
         for wd in "${weightdecays[@]}"
         do
-          python code/train_regression.py --nr_epochs 40 --optimizer $optimizer\
+          python code/train_regression.py --nr_epochs 40 \
+          --optimizer "$optimizer" --weightdecay "$wd"\
             --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
             --dnn_hidden_units "${dnn[$i]}" --dropout_percentages \
             "${dropouts[$i]}"
