@@ -15,7 +15,7 @@ cd $TMPDIR/IR2_5
 echo "Dataloader started running" | mail $USER
 
 python code/dataloader.py --expanded 0 --balance 1 --impression 1 \
-    --embedder TFIDF
+    --embedder Bert --reduced_classes 1
 
 cp -r  $TMPDIR/IR2_5/Data/*.p $HOME/IR2_5/Data/
 
