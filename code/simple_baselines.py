@@ -84,11 +84,19 @@ def run(FLAGS):
 
     engagement_lvls = engagement_lvls.long()
     mode_one_hot = torch.nn.functional.one_hot(mode.long(), 11).float()
+    median_one_hot = torch.nn.functional.one_hot(median.long(), 11).float()
+    
     CE_mode = CE_loss(mode_one_hot, engagement_lvls)
     accuracy_mode = get_accuracy(mode_one_hot, engagement_lvls)
 
     print(f"CE mode Loss: {CE_mode}")
     print(f"Accuracy mode: {accuracy_mode}")
+
+    CE_median = CE_loss(median_one_hot, engagement_lvls)
+    accuracy_median = get_accuracy(median_one_hot, engagement_lvls)
+
+    print(f"CE median Loss: {CE_median}")
+    print(f"Accuracy median: {accuracy_median}")
 
 
 if __name__ == "__main__":
