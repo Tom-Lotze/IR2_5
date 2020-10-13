@@ -25,6 +25,7 @@ echo "starting hyperparam tuning" | mail $USER
 declare -a dnn=("2000, 100, 16" "300, 32" "248")
 declare -a dropouts=("0.3, 0.2, 0.1" "0.3, 0.1" "0.1")
 declare -a lrs=("0.001" "0.0001")
+declare -a weightdecays=("0" "0.00001")
 declare -a embedders=("Bert" "TFIDF")
 
 
@@ -38,9 +39,13 @@ do
     do
       for i in $(seq 0 "$len")
       do
-        python code/train_regression.py --nr_epochs 80 --optimizer $optimizer\
-         --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
-         --dnn_hidden_units "${dnn[$i]}" --dropout_percentages "${dropouts[$i]}"
+        for wd in "${weightdecays[@]}"
+        do
+          python code/train_regression.py --nr_epochs 40 --optimizer $optimizer\
+            --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
+            --dnn_hidden_units "${dnn[$i]}" --dropout_percentages \
+            "${dropouts[$i]}"
+          done
        done
      done
   done
