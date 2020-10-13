@@ -81,12 +81,15 @@ def train():
 
     train_data = copy(dataset)
     train_data.ranges = train_ranges
+    train_data = RankDataSet(train_data)
 
     test_data = copy(dataset)
     test_data.ranges = test_ranges
+    test_data = RankDataSet(test_data)
     
     valid_data = copy(dataset)
     valid_data.ranges = valid_ranges
+    valid_data = RankDataSet(valid_data)
 
     train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
     valid_dl = DataLoader(valid_data, batch_size=64, shuffle=True, drop_last=True)
