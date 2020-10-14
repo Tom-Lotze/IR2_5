@@ -44,11 +44,13 @@ do
           for ams in "0" "1"
           do
             for mom in "0" "0.9"
-            python code/train_regression.py --nr_epochs 35 \
-              --optimizer "$optimizer" --weightdecay "$wd" --amsgrad "$ams"\
-              --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
-              --dnn_hidden_units "${dnn[$i]}" --dropout_probs \
-              "${dropouts[$i]}" --momentum "$mom"
+            do
+              python code/train_regression.py --nr_epochs 35 \
+                --optimizer "$optimizer" --weightdecay "$wd" --amsgrad "$ams"\
+                --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
+                --dnn_hidden_units "${dnn[$i]}" --dropout_probs \
+                "${dropouts[$i]}" --momentum "$mom"
+              done
             done
           done
        done
