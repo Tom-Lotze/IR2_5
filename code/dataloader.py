@@ -120,9 +120,9 @@ def load(FLAGS):
         engagement_lvls = [engagement_lvls[i] for i in indices]
         click_probs = [click_probs[i] for i in indices]
 
-        # Flatten to load into embedder
-        answers = [i for sublist in answers for i in sublist]
-        click_probs = [i for sublist in click_probs for i in sublist]
+    # Flatten to load into embedder
+    answers = [i for sublist in answers for i in sublist]
+    click_probs = [i for sublist in click_probs for i in sublist]
 
     # set language model
     if FLAGS.embedder == "Bert":
@@ -184,7 +184,7 @@ def load(FLAGS):
 
             nn = Regression(input_matrix.shape())
         elif FLAGS.embedder == "TFIDF":
-            
+            pass
 
         # all embeddings can be removed from the dataset, since forward pass is performed here
         dataset = Data(queries, questions, answers, impression_lvls,
@@ -223,13 +223,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--expanded', type=int, default=0,
                         help='Return the old type of datastructure')
-    parser.add_argument('--balance', type=int, default=1,
+    parser.add_argument('--balance', type=int, default=0,
                         help='Balance the data by fixing the distributions')
     parser.add_argument('--folder', type=str, default='Data/',
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    parser.add_argument('--impression', type=int, default=1,
+    parser.add_argument('--impression', type=int, default=0,
                         help='Use only the most shown clarification panes')
     parser.add_argument('--reduced_classes', type=int, default=0,
                         help='Either consider 11 classes, or 2 (binary case)')
