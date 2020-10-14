@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 10:20
+# @Last Modified time: 2020-10-14 10:43
 
 
 import argparse
@@ -13,6 +13,7 @@ import torch
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import pickle as pkl
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
@@ -211,11 +212,15 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=Fals
             x = x.to(device)
             y = y.long().squeeze().to(device)
 
-            print("shape of y", y.shape)
-
             test_pred = nn(x).to(device)
 
             loss = loss_function(test_pred, y)
+
+            if i == 0 :
+                print("shape of y", y.shape)
+                print("shape of pred", test_pred.shape)
+
+
             acc = get_accuracy(test_pred, y, verbose)
             losses.append(loss.item())
             accs.append(acc)
@@ -349,5 +354,4 @@ if __name__ == '__main__':
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
 
     main()
-
 
