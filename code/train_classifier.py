@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 11:31
+# @Last Modified time: 2020-10-14 11:43
 
 
 import argparse
@@ -281,6 +281,7 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
 
     # plot confusion matrix
+    plt.rcParams.update({"font.size": 12})
     plt.figure(figsize=(12, 12))
     cm = confusion_matrix(y_true, y_pred, normalize='all')
     cmd = ConfusionMatrixDisplay(cm)
