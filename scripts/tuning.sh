@@ -29,7 +29,6 @@ declare -a weightdecays=("0" "0.00001")
 declare -a embedders=("Bert" "TFIDF")
 
 
-declare len=${#dropouts[@]}
 
 for optimizer in 'Adam' 'SGD'
 do
@@ -37,14 +36,14 @@ do
   do
     for learning_rate in "${lrs[@]}"
     do
-      for i in $(seq 0 "$len")
+      for i in $(seq 0 2)
       do
         for wd in "${weightdecays[@]}"
         do
           python code/train_regression.py --nr_epochs 40 \
           --optimizer "$optimizer" --weightdecay "$wd"\
             --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
-            --dnn_hidden_units "${dnn[$i]}" --dropout_percentages \
+            --dnn_hidden_units "${dnn[$i]}" --dropout_probs \
             "${dropouts[$i]}"
           done
        done
