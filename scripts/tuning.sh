@@ -49,7 +49,7 @@ do
                 --optimizer "$optimizer" --weightdecay "$wd" --amsgrad "$ams"\
                 --learning_rate "$learning_rate" --verbose 0 --embedder "$emb"\
                 --dnn_hidden_units "${dnn[$i]}" --dropout_probs \
-                "${dropouts[$i]}" --momentum "$mom"
+                "${dropouts[$i]}" --momentum "$mom" --plotting 0
               done
             done
           done
