@@ -16,6 +16,7 @@ from tqdm import tqdm
 import argparse
 import os
 import itertools
+from regression import Regression
 from collections import Counter, defaultdict
 
 FLAGS = None
@@ -25,8 +26,7 @@ class Data():
     A class to save all the preprocessed data in
     """
     def __init__(self, queries, questions, answers, impression_lvls,
-                 engagement_lvls, click_probs, query_embeds, question_embeds,
-                 answer_embeds):
+                 engagement_lvls, click_probs):
         """
         Initializes Data object with all things that will be saved.
         """
@@ -36,9 +36,7 @@ class Data():
         self.impression_lvls = impression_lvls
         self.engagement_lvls = engagement_lvls
         self.click_probs = click_probs
-        self.query_embeds = query_embeds
-        self.question_embeds = query_embeds
-        self.answer_embeds = answer_embeds
+
         self.ranges = self.get_ranges(self.queries)
 
     def get_ranges(self, queries):
@@ -164,19 +162,6 @@ def load(FLAGS):
         X = torch.sparse_coo_tensor(indices, values, shape)
         print(f"shape of X: {X.shape}")
 
-        dataset = []
-        for i, inp in enumerate(X):
-            dataset.append((inp, torch.Tensor([int(engagement_lvls[i])]).float()))
-
-        # TODO: don't return here, move towards expanded
-
-        # save the dataset
-        with open(filename_dataset, "wb") as f:
-            pkl.dump(dataset, f)
-
-        return
-
-
     else:
         print(f"Embedder {FLAGS.embedder} does not exist")
         return
@@ -186,17 +171,24 @@ def load(FLAGS):
     if FLAGS.expanded:
         answers = list(zip(*[iter(answers)]*5))
         click_probs = list(zip(*[iter(click_probs)]*5))
-        answer_embeds = answer_embeds.reshape(-1, 5)
 
         # TODO
         # if statement if TFIDF or BERT
         # load neural net and perform forward pass on the data, yielding the predicted engagement levels
+        if FLAGS.embedder == "Bert":
+            query_embeds = query_embeds.reshape(-1, 1)
+            question_embeds = question_embeds.reshape(-1, 1)
+            answer_embeds = torch.cat(answer_embeds.reshape(-1, 5))
+            print(answer_embeds.shape)
+            input_matrix = torch.cat((query_embeds, question_embeds, answer_embeds), dim=1)
 
+            nn = Regression(input_matrix.shape())
+        elif FLAGS.embedder == "TFIDF":
+            
 
         # all embeddings can be removed from the dataset, since forward pass is performed here
         dataset = Data(queries, questions, answers, impression_lvls,
-                       engagement_lvls, click_probs, query_embeds,
-                       question_embeds, answer_embeds)
+                       engagement_lvls, click_probs)
 
         # save the dataloader
         with open(filename_dataset, "wb") as f:
@@ -204,19 +196,23 @@ def load(FLAGS):
     # return the dataset for regression
     else:
         dataset = []
+        if FLAGS.embedder == "Bert":
+            for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
 
-        for i, (query, question) in tqdm(enumerate(zip(query_embeds, question_embeds))):
+                # reshape answers
+                answers = answer_embeds[i*5:i*5+5]
+                answers = answers.reshape(-1)
 
-            # reshape answers
-            answers = answer_embeds[i*5:i*5+5]
-            answers = answers.reshape(-1)
+                engagement_lvl = torch.Tensor([int(engagement_lvls[i])]).float()
 
-            engagement_lvl = torch.Tensor([int(engagement_lvls[i])]).float()
+                inp = torch.cat((query, question, answers), 0)
 
-            inp = torch.cat((query, question, answers), 0)
-
-            # Add the datapoint to the dataset
-            dataset.append((inp, engagement_lvl))
+                # Add the datapoint to the dataset
+                dataset.append((inp, engagement_lvl))
+        
+        elif FLAGS.embedder == "TFIDF":
+            for i, inp in enumerate(X):
+                dataset.append((inp, torch.Tensor([int(engagement_lvls[i])]).float()))
 
         # save the dataloader
         with open(filename_dataset, "wb") as f:
