@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 19:11
+# @Last Modified time: 2020-10-14 10:20
 
 
 import argparse
@@ -179,19 +179,26 @@ def train():
 
 
     # compute loss and accuracy on the test set
-    optimal_nn = Classification(input_size, dnn_hidden_units, dropout_probs, 11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
-    optimal_nn.load_state_dict(torch.load(f"Models/Classification_{variables_string}.pt"))
-    test_loss, test_acc = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
+    optimal_nn = Classification(input_size, dnn_hidden_units, dropout_probs,
+        11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    optimal_nn.load_state_dict(torch.load(
+        f"Models/Classification_{variables_string}.pt"))
+    test_loss, test_acc, test_pred, test_true = eval_on_test(optimal_nn,
+        loss_function, test_dl, device, verbose=FLAGS.verbose,
+        return_preds=True)
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
-    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, optimal_batch, FLAGS)
+    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, test_true, test_pred, variables_string, optimal_batch, FLAGS)
 
 
 
-def eval_on_test(nn, loss_function, dl, device, verbose=False):
+def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=False):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
+    all_predictions = []
+    all_labels = []
+
     nn.eval()
     nn.to(device)
     if verbose:
@@ -204,6 +211,8 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
             x = x.to(device)
             y = y.long().squeeze().to(device)
 
+            print("shape of y", y.shape)
+
             test_pred = nn(x).to(device)
 
             loss = loss_function(test_pred, y)
@@ -211,13 +220,19 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
             losses.append(loss.item())
             accs.append(acc)
 
+            if return_preds:
+                all_predictions.extend((test_pred.max(dim=1)[1]).tolist())
+                all_labels.extend(y.tolist())
+
             if verbose and i == 0:
                 print(test_pred)
+    if not return_preds:
+        return np.mean(losses), np.mean(accs)
 
-    return np.mean(losses), np.mean(accs)
+    return np.mean(losses), np.mean(accs), all_predictions, all_labels
 
 
-def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, variables_string, optimal_batch, FLAGS):
+def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, y_true, y_pred, variables_string, optimal_batch, FLAGS):
     plt.rcParams.update({"font.size": 22})
 
     os.makedirs("Images", exist_ok=True)
@@ -256,7 +271,16 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     plt.tight_layout()
 
     fig_name = f"classification_loss_acc_{variables_string}.png"
+
     plt.savefig(f"Images/{fig_name}")
+
+
+    # plot confusion matrix
+    cm = confusion_matrix(y_true, y_pred, normalize='all')
+    cmd = ConfusionMatrixDisplay(cm)
+
+    confusion_name = f"classification_confusion_{variables_string}.png"
+    plt.savefig(f"Images/{confusion_name}")
 
 def print_flags():
     """
