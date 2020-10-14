@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 11:43
+# @Last Modified time: 2020-10-14 14:46
 
 
 import argparse
@@ -73,7 +73,7 @@ def train():
     print("Device :", device)
 
      # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression_filter}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -250,8 +250,8 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     plt.subplot(2, 1, 1)
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
-    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
+    plt.axhline(test_loss, label="Test loss", color="red")
+    plt.axvline(optimal_batch, label="Optimal model", linestyle="dashed", color="red")
     plt.title('Losses over training')
 
     # plt.ylim(0, 10)
@@ -264,8 +264,8 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     plt.subplot(2, 1, 2)
     plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
     plt.plot(steps_valid, valid_accs, '-', lw=2, label="Validation accuracy")
-    plt.hlines(test_acc, 0, max(steps_all), label="Test accuracy")
-    plt.vlines(optimal_batch, np.min([np.min(train_accs), np.min(valid_accs)]), np.max([np.max(train_accs), np.max(valid_accs)]), label="Optimal model")
+    plt.axhline(test_acc, label="Test accuracy", color="red")
+    plt.axvline(optimal_batch,  label="Optimal model", color="red", linestyle="dashed")
     plt.title('Accuracy over training')
 
     plt.xlabel('Batch')
@@ -294,7 +294,7 @@ def print_flags():
     """
     Prints all entries in FLAGS variable.
     """
-    print("Training classification with following params")
+
     for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
 
@@ -303,6 +303,7 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
+    print("Training classification with following params")
     print_flags()
 
     # Run the training operation
@@ -345,6 +346,8 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
+    parser.add_argument('--impression_filter', type=int, default=1,
+      help='If true, filter low impression instances out')
 
 
 
@@ -355,6 +358,7 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
+    FLAGS.impression_filter = bool(FLAGS.impression_filter)
 
     main()
 

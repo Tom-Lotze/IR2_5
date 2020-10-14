@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 21:15
+# @Last Modified time: 2020-10-14 14:42
 
 
 import argparse
@@ -214,8 +214,8 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
     plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
-    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
+    plt.axhline(test_loss, label="Test loss", color="red")
+    plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model")
     plt.title('Losses over training, including final test loss using optimal model')
 
 
@@ -284,6 +284,9 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
+    parser.add_argument('--impression_filter', type=int, default=1,
+      help='If true, filter low impression instances out')
+
 
 
 
@@ -292,6 +295,7 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
+    FLAGS.impression_filter = bool(FLAGS.impression_filter)
 
     main()
 
