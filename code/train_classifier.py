@@ -281,9 +281,9 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
 
     # plot confusion matrix
-    plt.rcParams.update({"font.size": 12})
+    plt.rcParams.update({"font.size": 10})
     plt.figure(figsize=(12, 12))
-    cm = confusion_matrix(y_true, y_pred, normalize='all')
+    cm = confusion_matrix(y_true, y_pred, normalize=None)
     cmd = ConfusionMatrixDisplay(cm)
     cmd.plot()
 
