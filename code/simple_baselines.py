@@ -3,6 +3,8 @@ import argparse
 import torch
 from collections import Counter
 import numpy as np
+from train_classifier import get_accuracy
+
 
 FLAGS = None
 
@@ -25,9 +27,9 @@ def run(FLAGS):
                 continue
             # Add values to the data lists
             if FLAGS.reduced_classes:
-                engagement_lvls.append(0 if int(line[8]) == 0 else 1)
+                engagement_lvls.append(0.0 if int(line[8]) == 0 else 1.0)
             else:
-                engagement_lvls.append(int(line[8]))
+                engagement_lvls.append(float(line[8]))
 
     # Attempt to fix class imbalance assuming 0 is to large
     if FLAGS.balance:
@@ -48,7 +50,12 @@ def run(FLAGS):
         # Update datalist based on indices
         engagement_lvls = [engagement_lvls[i] for i in indices]
 
+    print("Balance:", FLAGS.balance)
+    print("Impression:", FLAGS.impression)
+    print("Reduced Classes:", FLAGS.reduced_classes)
+
     print("Engagement levels:", Counter(engagement_lvls))
+    print("Total number of engagement levels:", len(engagement_lvls))
 
     engagement_lvls = torch.tensor(engagement_lvls)
     mean_eng = torch.mean(engagement_lvls)
@@ -77,9 +84,19 @@ def run(FLAGS):
 
     engagement_lvls = engagement_lvls.long()
     mode_one_hot = torch.nn.functional.one_hot(mode.long(), 11).float()
+    median_one_hot = torch.nn.functional.one_hot(median.long(), 11).float()
+    
     CE_mode = CE_loss(mode_one_hot, engagement_lvls)
+    accuracy_mode = get_accuracy(mode_one_hot, engagement_lvls)
 
     print(f"CE mode Loss: {CE_mode}")
+    print(f"Accuracy mode: {accuracy_mode}")
+
+    CE_median = CE_loss(median_one_hot, engagement_lvls)
+    accuracy_median = get_accuracy(median_one_hot, engagement_lvls)
+
+    print(f"CE median Loss: {CE_median}")
+    print(f"Accuracy median: {accuracy_median}")
 
 
 if __name__ == "__main__":
@@ -88,7 +105,7 @@ if __name__ == "__main__":
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    parser.add_argument('--balance', type=int, default=1,
+    parser.add_argument('--balance', type=int, default=0,
                         help='Balance the data by fixing the distributions')
     parser.add_argument('--impression', type=int, default=1,
                         help='Use only the most shown clarification panes')

@@ -7,6 +7,8 @@ import pickle as pkl
 from ranknet import RankNet
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
+from sklearn.model_selection import train_test_split
+from copy import copy
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '256, 128, 32'
@@ -73,9 +75,21 @@ def train():
     with open(os.path.join(FLAGS.data_dir, FLAGS.filename), "rb") as f:
         dataset = pkl.load(f)
       
-    #TODO datasplits?
+    #TODO Done?
+    train_ranges, test_valid_ranges = train_test_split(dataset.ranges, test_size=0.4)
+    test_ranges, valid_ranges = train_test_split(test_valid_ranges, test_size=0.5)
 
+    train_data = copy(dataset)
+    train_data.ranges = train_ranges
+    train_data = RankDataSet(train_data)
+
+    test_data = copy(dataset)
+    test_data.ranges = test_ranges
+    test_data = RankDataSet(test_data)
     
+    valid_data = copy(dataset)
+    valid_data.ranges = valid_ranges
+    valid_data = RankDataSet(valid_data)
 
     train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
     valid_dl = DataLoader(valid_data, batch_size=64, shuffle=True, drop_last=True)
