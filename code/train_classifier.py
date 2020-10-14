@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 10:43
+# @Last Modified time: 2020-10-14 11:31
 
 
 import argparse
@@ -281,8 +281,10 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
 
     # plot confusion matrix
+    plt.figure(12, 12)
     cm = confusion_matrix(y_true, y_pred, normalize='all')
     cmd = ConfusionMatrixDisplay(cm)
+    cmd.plot()
 
     confusion_name = f"classification_confusion_{variables_string}.png"
     plt.savefig(f"Images/{confusion_name}")
