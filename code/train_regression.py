@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 15:00
+# @Last Modified time: 2020-10-14 15:16
 
 
 import argparse
@@ -213,9 +213,9 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
-    plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.axhline(test_loss, label="Test loss", color="red")
-    plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model")
+    plt.plot(steps_valid, valid_losses, '-', lw=3, label="Validation loss")
+    plt.axhline(test_loss, label="Test loss", color="red", lw=3)
+    plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
     plt.title('Losses over training, including final test loss using optimal model')
 
 

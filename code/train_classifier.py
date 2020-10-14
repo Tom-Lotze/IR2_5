@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 15:01
+# @Last Modified time: 2020-10-14 15:17
 
 
 import argparse
@@ -263,9 +263,9 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
     plt.subplot(2, 1, 2)
     plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
-    plt.plot(steps_valid, valid_accs, '-', lw=2, label="Validation accuracy")
-    plt.axhline(test_acc, label="Test accuracy", color="red")
-    plt.axvline(optimal_batch,  label="Optimal model", color="red", linestyle="dashed")
+    plt.plot(steps_valid, valid_accs, '-', lw=3, label="Validation accuracy")
+    plt.axhline(test_acc, label="Test accuracy", color="red", lw=3)
+    plt.axvline(optimal_batch,  label="Optimal model", color="red", linestyle="dashed", lw=3)
     plt.title('Accuracy over training')
 
     plt.xlabel('Batch')
