@@ -18,7 +18,7 @@ echo "Regression started running" | mail $USER
 python code/test_cuda_print.py
 python code/train_regression.py --nr_epochs 40 --weightdecay 0.0001 \
     --optimizer SGD --momentum 0.9  --batchnorm 1 \
-    --dropout_probs "0.3, 0.05" --embedder 'BERT'
+    --dropout_probs "0.3, 0.05" --embedder 'Bert'
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
