@@ -1,6 +1,7 @@
 from torch.utils.data import Dataset
 import itertools
 import torch
+import numpy as np
 
 class RankDataSet(Dataset):
     def __init__(self, dataset, use_preds):
@@ -29,6 +30,9 @@ class RankDataSet(Dataset):
         n_answers = [sum(1 for i in answer if i != "") for answer in answers]
         n_answers = torch.tensor(n_answers).reshape(-1,1)
 
+        avg_answer_len = [np.mean([len(i) for i in answer]) for answer in answers]
+        avg_answer_len = torch.tensor(avg_answer_len).reshape(-1,1)
+
         query_len = [len(self.dataset.queries[i]) for i in indices]
         query_len = torch.tensor(query_len).reshape(-1,1)
 
@@ -38,7 +42,7 @@ class RankDataSet(Dataset):
         click_probs = [self.dataset.click_probs[i] for i in indices]
         click_probs = torch.tensor(click_probs).reshape(-1,5)
 
-        vectors = torch.cat((n_answers, query_len, question_len, click_probs), dim=1)
+        vectors = torch.cat((n_answers, avg_answer_len, query_len, question_len, click_probs), dim=1)
 
         if self.use_preds:
             preds = [self.dataset.preds[i] for i in indices]

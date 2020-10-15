@@ -124,9 +124,9 @@ def train():
 
 
     if FLAGS.use_preds:
-      input_size = 9
+      input_size = 10
     else:
-      input_size = 8
+      input_size = 9
 
     variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
     
