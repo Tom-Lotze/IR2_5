@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:48
+# @Last Modified time: 2020-10-15 21:56
 
 
 import argparse
@@ -205,7 +205,8 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
     median = torch.full_like(test_labels, median_eng)
     mode = torch.full_like(test_labels, mode_eng)
 
-    MSE_MODEL = loss_fn(test_preds, test_labels)
+    print("shapes", mean.shape, test_preds.shape)
+
     MSE_mean = loss_fn(mean, test_labels)
     MSE_median = loss_fn(median, test_labels)
     MSE_mode = loss_fn(mode, test_labels)
@@ -214,7 +215,7 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
     t_median, p_median = ttest_rel(median, test_preds)
     t_mode, p_mode = ttest_rel(mode, test_preds)
 
-    print(f"MSE MODEL Loss: {MSE_MODEL}")
+
     print(f"MSE mean Loss: {MSE_mean}, p-value: {p_mean}")
     print(f"MSE median Loss: {MSE_median}, p-value: {p_median}")
     print(f"MSE mode Loss: {MSE_mode}, p-value: {p_mode}")
