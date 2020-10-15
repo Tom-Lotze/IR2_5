@@ -212,6 +212,8 @@ def train():
                 #TODO Optimal model?
             
             overall_batch += 1
+
+    torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")        
     
     test_loss = eval_on_test(nn, test_dl, device)
 
