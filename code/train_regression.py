@@ -150,7 +150,7 @@ def train():
             # print(f"batch loss ({batch}): {loss.item()}")
 
             # get loss on validation set and evaluate
-            if overall_batch % FLAGS.eval_freq == 0:
+            if overall_batch % FLAGS.eval_freq == 0 and overall_batch != 0:
                 valid_loss = eval_on_test(nn, loss_function, valid_dl, device)
                 valid_losses.append(valid_loss)
                 print(f"Training loss: {loss.item()} / Valid loss: {valid_loss}")

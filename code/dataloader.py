@@ -26,7 +26,7 @@ class Data():
     A class to save all the preprocessed data in
     """
     def __init__(self, queries, questions, answers, impression_lvls,
-                 engagement_lvls, click_probs):
+                 engagement_lvls, click_probs, predictions):
         """
         Initializes Data object with all things that will be saved.
         """
@@ -36,6 +36,7 @@ class Data():
         self.impression_lvls = impression_lvls
         self.engagement_lvls = engagement_lvls
         self.click_probs = click_probs
+        self.predictions = predictions
 
         self.ranges = self.get_ranges(self.queries)
 
@@ -79,7 +80,7 @@ def load(FLAGS):
         # skip the first line (consists of labels)
         next(tsvreader, None)
 
-        for line in tsvreader:
+        for i, line in enumerate(tsvreader):
             # skip the instances that have a low impression level
             if FLAGS.impression and line[7] == "low":
                 continue
@@ -146,13 +147,21 @@ def load(FLAGS):
 
     elif FLAGS.embedder == "TFIDF":
         # initialize the vectorized
-        vectorizer = TfidfVectorizer()
+        if FLAGS.expanded:
+            with open(f"{FLAGS.folder}TFIDF_vocab.p") as f:
+                vocab = pickle.load(f)
+            vectorizer = TfidfVectorizer()
+        else:
+            vectorizer = TfidfVectorizer()
 
         # create the corpus: a list of string, each string is a data instance
         corpus = [" ".join([queries[i], questions[i], " ".join(answers[i*5:i*5+5])]) for i in range(len(queries))]
 
         # this yields a sparse vector
         X = vectorizer.fit_transform(corpus)
+        if not FLAGS.expanded:
+            with open(f"{FLAGS.folder}TFIDF_vocab.p", "wb") as f:
+                pkl.dump(vectorizer.vocabulary_, f)
 
         # use code snippet from https://ray075hl.github.io/ray075hl.github.io/sparse_matrix_pytorch/ to convert to torch tensor
         X = X.tocoo().astype(np.float32)
@@ -176,19 +185,32 @@ def load(FLAGS):
         # if statement if TFIDF or BERT
         # load neural net and perform forward pass on the data, yielding the predicted engagement levels
         if FLAGS.embedder == "Bert":
-            query_embeds = query_embeds.reshape(-1, 1)
-            question_embeds = question_embeds.reshape(-1, 1)
-            answer_embeds = torch.cat(answer_embeds.reshape(-1, 5))
-            print(answer_embeds.shape)
+            answer_embeds = answer_embeds.reshape(query_embeds.shape[0], -1)
+            
             input_matrix = torch.cat((query_embeds, question_embeds, answer_embeds), dim=1)
 
-            nn = Regression(input_matrix.shape())
+            nn = Regression(n_inputs=input_matrix.shape[1], 
+                            n_hidden=[300,32], dropout_percentages=[0.0,0.0], 
+                            n_classes=1, 
+                            batchnorm=True)
+            nn.load_state_dict(torch.load("Models/Regression_Bert_SGD_0.0001_1e-05_300, 32_0.0, 0.0_True_40.pt"))
+            nn.eval()
+            with torch.no_grad():
+                preds = nn(input_matrix).squeeze()
         elif FLAGS.embedder == "TFIDF":
-            pass
-
-        # all embeddings can be removed from the dataset, since forward pass is performed here
+            nn = Regression(n_inputs=X.shape[1], 
+                            n_hidden=[300,32], dropout_percentages=[0.0,0.0], 
+                            n_classes=1, 
+                            batchnorm=True)
+            # TODO Correct model
+            nn.load_state_dict(torch.load("Models/Regression_Bert_SGD_0.0001_1e-05_300, 32_0.0, 0.0_True_40.pt"))
+            nn.eval()
+            with torch.no_grad():
+                preds = nn(X).squeeze()
+        
+        # Save in Data object
         dataset = Data(queries, questions, answers, impression_lvls,
-                       engagement_lvls, click_probs)
+                       engagement_lvls, click_probs, preds)
 
         # save the dataloader
         with open(filename_dataset, "wb") as f:
@@ -227,7 +249,7 @@ if __name__ == "__main__":
                         help='Balance the data by fixing the distributions')
     parser.add_argument('--folder', type=str, default='Data/',
                         help='Folder where the data is located')
-    parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
+    parser.add_argument('--filename', type=str, default="MIMICS-ClickExplore.tsv",
                         help='Filename of the data')
     parser.add_argument('--impression', type=int, default=0,
                         help='Use only the most shown clarification panes')
