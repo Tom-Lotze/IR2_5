@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name="regression"
+#SBATCH --job-name="ranker"
 #SBATCH --time=24:00:00
 #SBATCH --partition=gpu_shared_course
 
