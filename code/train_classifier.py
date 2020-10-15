@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 16:27
+# @Last Modified time: 2020-10-15 20:45
 
 
 import argparse
@@ -19,7 +19,7 @@ from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
 DROPOUT_DEFAULT = '0.0, 0.0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 40
+NR_EPOCHS_DEFAULT = 30
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
@@ -330,9 +330,9 @@ if __name__ == '__main__':
       help='Directory for storing input data')
     parser.add_argument('--neg_slope', type=float, default=NEG_SLOPE_DEFAULT,
       help='Negative slope parameter for LeakyReLU')
-    parser.add_argument('--optimizer', type=str, default="SGD",
+    parser.add_argument('--optimizer', type=str, default="Adam",
       help='Type of optimizer')
-    parser.add_argument('--amsgrad', type=int, default=0,
+    parser.add_argument('--amsgrad', type=int, default=1,
                         help='Boolean: Amsgrad for Adam and Adamw')
     parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
