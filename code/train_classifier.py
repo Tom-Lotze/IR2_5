@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 20:45
+# @Last Modified time: 2020-10-15 21:22
 
 
 import argparse
@@ -73,7 +73,7 @@ def train():
     print("Device :", device)
 
      # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression_filter}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -117,7 +117,7 @@ def train():
     valid_accs = []
 
     # construct name for saving models and figures
-    variables_string = f"classification_{FLAGS.embedder}_{FLAGS.impression_filter}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"classification_{FLAGS.embedder}_{FLAGS.impression}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     initial_train_loss, initial_train_acc = eval_on_test(nn, loss_function, train_dl, device)
     training_losses.append(initial_train_loss)
@@ -179,11 +179,12 @@ def train():
             overall_batch += 1
 
 
-    # compute loss and accuracy on the test set
+    # compute loss and accuracy on the test set using the optimal model
     optimal_nn = Classification(input_size, dnn_hidden_units, dropout_probs,
         11, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
     optimal_nn.load_state_dict(torch.load(
         f"Models/Classification_{variables_string}.pt"))
+
     test_loss, test_acc, test_pred, test_true = eval_on_test(optimal_nn,
         loss_function, test_dl, device, verbose=FLAGS.verbose,
         return_preds=True)
@@ -191,6 +192,10 @@ def train():
 
     if FLAGS.plotting:
         plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, test_true, test_pred, variables_string, optimal_batch, FLAGS)
+
+
+
+
 
 
 
@@ -217,11 +222,6 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=Fals
 
             loss = loss_function(test_pred, y)
 
-            if i == 0 :
-                print("shape of y", y.shape)
-                print("shape of pred", test_pred.shape)
-
-
             acc = get_accuracy(test_pred, y, verbose)
             losses.append(loss.item())
             accs.append(acc)
@@ -232,10 +232,14 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=Fals
 
             if verbose and i == 0:
                 print(test_pred)
-    if not return_preds:
-        return np.mean(losses), np.mean(accs)
 
-    return np.mean(losses), np.mean(accs), all_predictions, all_labels
+    mean_losses = np.mean(losses)
+    mean_accs = np.mean(accs)
+
+    if not return_preds:
+        return mean_losses, mean_accs
+
+    return mean_losses, mean_accs, all_predictions, all_labels
 
 
 def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test_acc, y_true, y_pred, variables_string, optimal_batch, FLAGS):
@@ -347,7 +351,7 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
-    parser.add_argument('--impression_filter', type=int, default=1,
+    parser.add_argument('--impression', type=int, default=1,
       help='If true, filter low impression instances out')
     parser.add_argument('--plotting', type=int, default=1,
       help='if true, plots are saved')
@@ -361,7 +365,7 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
-    FLAGS.impression_filter = bool(FLAGS.impression_filter)
+    FLAGS.impression = bool(FLAGS.impression)
     FLAGS.plotting = bool(FLAGS.plotting)
 
     main()
