@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:56
+# @Last Modified time: 2020-10-15 22:09
 
 
 import argparse
@@ -175,6 +175,10 @@ def train():
 
     test_loss, test_pred, test_true = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose, return_preds=True)
 
+    # save the test predictions of the regressor
+    with open(f"Predictions/regression_test_preds.pt", "wb") as f:
+        pkl.dump(test_pred, f)
+
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
 
     significance_testing(test_pred, test_true, loss_function, FLAGS)
@@ -205,7 +209,7 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
     median = torch.full_like(test_labels, median_eng)
     mode = torch.full_like(test_labels, mode_eng)
 
-    print("shapes", mean.shape, test_preds.shape)
+    print("shapes", mean.shape, test_preds.shape, test_labels.shape)
 
     MSE_mean = loss_fn(mean, test_labels)
     MSE_median = loss_fn(median, test_labels)
@@ -247,7 +251,7 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=Fals
             losses.append(loss.item())
 
             if return_preds:
-                all_predictions.extend((test_pred).tolist())
+                all_predictions.extend(test_pred.squeeze().tolist())
                 all_labels.extend(y.squeeze().tolist())
 
             if verbose and i == 0:

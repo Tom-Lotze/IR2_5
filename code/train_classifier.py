@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:26
+# @Last Modified time: 2020-10-15 22:07
 
 
 import argparse
@@ -189,6 +189,12 @@ def train():
     test_loss, test_acc, test_pred, test_true = eval_on_test(optimal_nn,
         loss_function, test_dl, device, verbose=FLAGS.verbose,
         return_preds=True)
+
+    # save the test predictions of the classifier
+    with open(f"Predictions/classification_test_preds.pt", "wb") as f:
+        pkl.dump(test_pred, f)
+
+
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
     if FLAGS.plotting:
