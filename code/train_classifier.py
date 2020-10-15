@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:22
+# @Last Modified time: 2020-10-15 21:26
 
 
 import argparse
@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import pickle as pkl
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from collections import Counter
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
