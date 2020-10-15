@@ -96,7 +96,7 @@ def train():
     test_dl = DataLoader(test_data, batch_size=64, shuffle=True, drop_last=True)
     
     # initialize MLP
-    nn = RankNet(5, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = RankNet(, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
 
     # initialize optimizer
     if FLAGS.optimizer == "SGD":
@@ -118,37 +118,37 @@ def train():
 
     
     for epoch in tqdm(range(FLAGS.nr_epochs)):
-         for step, (x_batch, y_batch) in enumerate(train_dl):
+        for step, (x_batch, y_batch) in enumerate(train_dl):
                 
-                optimizer.zero_grad()
+            optimizer.zero_grad()
 
-                num_docs = x_batch.shape[1]
-                num_pairs = num_docs * num_docs
+            num_docs = x_batch.shape[1]
+            num_pairs = num_docs * num_docs
 
-                # ignore batch if only one doc (no pairs)
-                if num_docs == 1:
-                    continue
+            # ignore batch if only one doc (no pairs)
+            if num_docs == 1:
+                continue
 
-                # squeeze batch
-                x_batch = x_batch.float().squeeze()
-                y_batch = y_batch.float().t()
+            # squeeze batch
+            x_batch = x_batch.float().squeeze()
+            y_batch = y_batch.float().t()
 
-                # construct labels matrix
-                labels_mat = y_batch.t() - y_batch
-                labels_mat[labels_mat > 0] = 1
-                labels_mat[labels_mat == 0] = 0
-                labels_mat[labels_mat < 0] = -1
+            # construct labels matrix
+            labels_mat = y_batch.t() - y_batch
+            labels_mat[labels_mat > 0] = 1
+            labels_mat[labels_mat == 0] = 0
+            labels_mat[labels_mat < 0] = -1
 
-                # perform forward pass and compute lambdas
-                scores = nn(x_batch)
-                diff_mat = torch.sigmoid(torch.add(scores.t(), -scores))
+            # perform forward pass and compute lambdas
+            scores = nn(x_batch)
+            diff_mat = torch.sigmoid(torch.add(scores.t(), -scores))
 
-                lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
-                lambda_i = lambda_ij.sum(dim=0)
+            lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
+            lambda_i = lambda_ij.sum(dim=0)
 
-                # perform backward pass and correct for number of pairs
-                scores.squeeze().backward(lambda_i / num_pairs)
-                optimizer.step()
+            # perform backward pass and correct for number of pairs
+            scores.squeeze().backward(lambda_i / num_pairs)
+            optimizer.step()
 
 
 if __name__ == '__main__':
@@ -180,7 +180,7 @@ if __name__ == '__main__':
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
-    parser.add_argument('--filename', type=str, default="MIMICS-ClickExplore.p",
+    parser.add_argument('--filename', type=str, default="dataset_filename=MIMICS-ClickExplore.tsv_expanded=True_balance=False_impression=False_reduced_classes=False_embedder=Bert.p",
                         help='Filename of the data')
 
     FLAGS, unparsed = parser.parse_known_args()

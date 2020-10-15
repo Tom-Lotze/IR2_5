@@ -20,7 +20,22 @@ class RankDataSet(Dataset):
         """
         # TODO concat all the datapoints
         indices = self.dataset.ranges[index]
-        labels = self.dataset.engagement_lvls[indices]
+        labels = [self.dataset.engagement_lvls[i] for i in indices]
+        labels = torch.tensor(n_answers).reshape(-1,1)
+        
+        answers = [self.dataset.answers[i] for i in indices]
+        n_answers = [sum(1 if i != "" for i in answer) for answer in answers]
+        n_answers = torch.tensor(n_answers).reshape(-1,1)
 
+        query_len = [len(self.dataset.queries[i]) for i in indices]
+        query_len = torch.tensor(n_answers).reshape(-1,1)
+
+        question_len = [len(self.dataset.questions[i]) for i in indices]
+        question_len = torch.tensor(n_answers).reshape(-1,1)
+
+        click_probs = [len(self.dataset.click_probs[i]) for i in indices]
+        click_probs = torch.tensor(n_answers).reshape(-1,5)
+
+        vectors = torch.cat((n_answers, query_len, question_len, click_probs), dim=1)
 
         return vectors, labels
