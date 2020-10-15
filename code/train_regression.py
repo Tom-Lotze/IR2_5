@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:31
+# @Last Modified time: 2020-10-15 21:37
 
 
 import argparse
@@ -189,7 +189,7 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
     print(f"Total number of engagement levels: {len(test_labels)}\n")
 
     test_labels = torch.tensor(test_labels)
-    test_pred = torch.tensor(test_preds)
+    test_preds = torch.tensor(test_preds)
     mean_eng = torch.mean(test_labels)
     median_eng = torch.median(test_labels)
     mode_eng = torch.mode(test_labels)[0]
