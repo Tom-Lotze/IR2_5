@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 20:45
+# @Last Modified time: 2020-10-15 21:08
 
 
 import argparse
@@ -167,19 +167,62 @@ def train():
     optimal_nn.load_state_dict(torch.load(f"Models/Regression_{variables_string}.pt"))
 
 
-    test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
+    test_loss, test_pred, test_true = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose, return_preds=True)
 
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
+
+    significance_testing(test_pred, test_true, loss_function, FLAGS)
 
     if FLAGS.plotting:
         plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
 
 
 
-def eval_on_test(nn, loss_function, dl, device, verbose=False):
+def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
+
+    print("\nBalance:", FLAGS.balance)
+    print("Impression:", FLAGS.impression)
+    print("Reduced Classes:", FLAGS.reduced_classes)
+
+    print("Engagement levels:", Counter(test_labels))
+    print(f"Total number of engagement levels: {len(test_labels)}\n")
+
+    test_labels = torch.tensor(test_labels)
+    test_pred = torch.tensor(test_preds)
+    mean_eng = torch.mean(test_labels)
+    median_eng = torch.median(test_labels)
+    mode_eng = torch.mode(test_labels)[0]
+
+    print(f"mean, median, mode: {mean_eng}, {median_eng}, {mode_eng}")
+
+
+    mean = torch.full_like(test_labels, mean_eng)
+    median = torch.full_like(test_labels, median_eng)
+    mode = torch.full_like(test_labels, mode_eng)
+
+    MSE_MODEL = loss_fn(test_preds, test_labels)
+    MSE_mean = loss_fn(mean, test_labels)
+    MSE_median = loss_fn(median, test_labels)
+    MSE_mode = loss_fn(mode, test_labels)
+
+    t_mean, p_mean = ttest_rel(mean, test_preds)
+    t_median, p_median = ttest_rel(median, test_preds)
+    t_mode, p_mode = ttest_rel(mode, test_preds)
+
+    print(f"MSE MODEL Loss: {MSE_MODEL}")
+    print(f"MSE mean Loss: {MSE_mean}, p-value: {p_mean}")
+    print(f"MSE median Loss: {MSE_median}, p-value: {p_median}")
+    print(f"MSE mode Loss: {MSE_mode}, p-value: {p_mode}")
+
+
+
+def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=False):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
+    all_predictions = []
+    all_labels = []
+
     nn.eval()
     if verbose:
         print(f"neural net:\n {[param.data for param in nn.parameters()]}")
@@ -197,10 +240,19 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
 
             losses.append(loss.item())
 
+            if return_preds:
+                all_predictions.extend((test_pred).tolist())
+                all_labels.extend(y.squeeze().tolist())
+
             if verbose and i == 0:
                 print(test_pred)
 
-    return np.mean(losses)
+    mean_losses = np.mean(losses)
+
+    if not return_preds:
+        return mean_losses
+
+    return mean_losses, all_predictions, all_labels
 
 
 def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS):
