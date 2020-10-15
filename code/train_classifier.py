@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 22:07
+# @Last Modified time: 2020-10-15 22:31
 
 
 import argparse
@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 import pickle as pkl
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from collections import Counter
+from scipy.stats import ttest_rel
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
@@ -194,16 +195,49 @@ def train():
     with open(f"Predictions/classification_test_preds.pt", "wb") as f:
         pkl.dump(test_pred, f)
 
-
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
+
+    significance_testing(test_pred, test_true, loss_function, FLAGS)
 
     if FLAGS.plotting:
         plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, test_true, test_pred, variables_string, optimal_batch, FLAGS)
 
 
 
+def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
+
+    print("\nImpression:", FLAGS.impression)
+    print("Reduced Classes:", FLAGS.reduced_classes)
+
+    print("Engagement levels:", Counter(test_labels))
+    print(f"Total number of engagement levels: {len(test_labels)}\n")
+
+    test_labels = torch.tensor(test_labels)
+    test_preds = torch.tensor(test_preds)
+    median_eng = torch.median(test_labels)
+    mode_eng = torch.mode(test_labels)[0]
+
+    print(f"median, mode: {median_eng}, {mode_eng}")
 
 
+    median = torch.full_like(test_labels, median_eng)
+    mode = torch.full_like(test_labels, mode_eng)
+
+    mode_one_hot = torch.nn.functional.one_hot(mode.long(), 11).float()
+    median_one_hot = torch.nn.functional.one_hot(median.long(), 11).float()
+
+    print("shapes", median.shape, test_preds.shape, test_labels.shape)
+
+    print(test_preds[:50])
+
+    MSE_median = loss_fn(median_one_hot, test_labels)
+    MSE_mode = loss_fn(mode_one_hot, test_labels)
+
+    t_median, p_median = ttest_rel(median, test_preds)
+    t_mode, p_mode = ttest_rel(mode, test_preds)
+
+    print(f"MSE median Loss: {MSE_median}, p-value: {p_median}")
+    print(f"MSE mode Loss: {MSE_mode}, p-value: {p_mode}")
 
 
 def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=False):
