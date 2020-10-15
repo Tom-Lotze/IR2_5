@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:37
+# @Last Modified time: 2020-10-15 21:41
 
 
 import argparse
@@ -78,6 +78,9 @@ def train():
     train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     valid_dl = DataLoader(valid_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     test_dl = DataLoader(test_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
+
+    with open(f"{FLAGS.data_dir}/test_dl.pt", "wb") as f:
+        pkl.dump(test_dl, f)
 
 
      # initialize MLP and loss function
