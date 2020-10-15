@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:08
+# @Last Modified time: 2020-10-15 21:18
 
 
 import argparse
@@ -180,8 +180,7 @@ def train():
 
 def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
 
-    print("\nBalance:", FLAGS.balance)
-    print("Impression:", FLAGS.impression)
+    print("\nImpression:", FLAGS.impression)
     print("Reduced Classes:", FLAGS.reduced_classes)
 
     print("Engagement levels:", Counter(test_labels))
