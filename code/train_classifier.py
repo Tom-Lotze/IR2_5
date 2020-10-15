@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 11:43
+# @Last Modified time: 2020-10-14 16:27
 
 
 import argparse
@@ -73,7 +73,7 @@ def train():
     print("Device :", device)
 
      # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression_filter}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -117,7 +117,7 @@ def train():
     valid_accs = []
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.embedder}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"classification_{FLAGS.embedder}_{FLAGS.impression_filter}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     initial_train_loss, initial_train_acc = eval_on_test(nn, loss_function, train_dl, device)
     training_losses.append(initial_train_loss)
@@ -189,7 +189,8 @@ def train():
         return_preds=True)
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
 
-    plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, test_true, test_pred, variables_string, optimal_batch, FLAGS)
+    if FLAGS.plotting:
+        plotting(training_losses, training_accs, valid_losses, valid_accs, test_loss, test_acc, test_true, test_pred, variables_string, optimal_batch, FLAGS)
 
 
 
@@ -242,17 +243,17 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
     os.makedirs("Images", exist_ok=True)
 
-    plt.figure(figsize=(20, 12))
+    plt.figure(figsize=(16, 10))
     steps_all = np.arange(0, len(train_losses))
     steps_valid = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
 
     # plot the losses
     plt.subplot(2, 1, 1)
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
-    plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
-    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
-    plt.title('Losses over training')
+    plt.plot(steps_valid, valid_losses, '-', lw=3, label="Validation loss")
+    plt.axhline(test_loss, label="Test loss", color="red", lw=3)
+    plt.axvline(optimal_batch, label="Optimal model", linestyle="dashed", color="red", lw=3)
+    # plt.title('Losses over training')
 
     # plt.ylim(0, 10)
 
@@ -263,10 +264,10 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
     plt.subplot(2, 1, 2)
     plt.plot(steps_all, train_accs, '-', lw=2, label="Training accuracy")
-    plt.plot(steps_valid, valid_accs, '-', lw=2, label="Validation accuracy")
-    plt.hlines(test_acc, 0, max(steps_all), label="Test accuracy")
-    plt.vlines(optimal_batch, np.min([np.min(train_accs), np.min(valid_accs)]), np.max([np.max(train_accs), np.max(valid_accs)]), label="Optimal model")
-    plt.title('Accuracy over training')
+    plt.plot(steps_valid, valid_accs, '-', lw=3, label="Validation accuracy")
+    plt.axhline(test_acc, label="Test accuracy", color="red", lw=3)
+    plt.axvline(optimal_batch,  label="Optimal model", color="red", linestyle="dashed", lw=3)
+    # plt.title('Accuracy over training')
 
     plt.xlabel('Batch')
     plt.ylabel('Accuracy')
@@ -275,7 +276,7 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
 
     plt.tight_layout()
 
-    fig_name = f"classification_loss_acc_{variables_string}.png"
+    fig_name = f"loss_accplot_{variables_string}.png"
 
     plt.savefig(f"Images/{fig_name}")
 
@@ -287,14 +288,14 @@ def plotting(train_losses, train_accs, valid_losses, valid_accs, test_loss, test
     cmd = ConfusionMatrixDisplay(cm)
     cmd.plot()
 
-    confusion_name = f"classification_confusion_{variables_string}.png"
+    confusion_name = f"confusion_{variables_string}.png"
     plt.savefig(f"Images/{confusion_name}")
 
 def print_flags():
     """
     Prints all entries in FLAGS variable.
     """
-    print("Training classification with following params")
+
     for key, value in vars(FLAGS).items():
         print(key + ' : ' + str(value))
 
@@ -303,6 +304,7 @@ def main():
     Main function
     """
     # Print all Flags to confirm parameter settings
+    print("Training classification with following params")
     print_flags()
 
     # Run the training operation
@@ -345,6 +347,10 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
+    parser.add_argument('--impression_filter', type=int, default=1,
+      help='If true, filter low impression instances out')
+    parser.add_argument('--plotting', type=int, default=1,
+      help='if true, plots are saved')
 
 
 
@@ -355,6 +361,8 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
+    FLAGS.impression_filter = bool(FLAGS.impression_filter)
+    FLAGS.plotting = bool(FLAGS.plotting)
 
     main()
 

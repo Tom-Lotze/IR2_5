@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-12 21:15
+# @Last Modified time: 2020-10-14 16:27
 
 
 import argparse
@@ -62,7 +62,7 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression=True_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression_filter}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -113,7 +113,7 @@ def train():
 
 
     # construct name for saving models and figures
-    variables_string = f"{FLAGS.embedder}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"regression_{FLAGS.embedder}_{FLAGS.impression_filter}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     overall_batch = 0
     min_valid_loss = 10000
@@ -171,7 +171,8 @@ def train():
 
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
 
-    plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
+    if FLAGS.plotting:
+        plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
 
 
 
@@ -207,16 +208,16 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
 
     os.makedirs("Images", exist_ok=True)
 
-    plt.figure(figsize=(20, 12))
+    plt.figure(figsize=(15, 9))
     steps_all = np.arange(0, len(train_losses))
     steps_valid = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
 
     # plot the losses
     plt.plot(steps_all, train_losses, '-', lw=2, label="Training loss")
-    plt.plot(steps_valid, valid_losses, '-', lw=2, label="Validation loss")
-    plt.hlines(test_loss, 0, max(steps_all), label="Test loss")
-    plt.vlines(optimal_batch, 0, np.max([np.max(train_losses), np.max(valid_losses)]), label="Optimal model")
-    plt.title('Losses over training, including final test loss using optimal model')
+    plt.plot(steps_valid, valid_losses, '-', lw=3, label="Validation loss")
+    plt.axhline(test_loss, label="Test loss", color="red", lw=3)
+    plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
+    # plt.title('Losses over training, including final test loss using optimal model')
 
 
     plt.xlabel('Batch')
@@ -226,7 +227,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
 
     plt.tight_layout()
 
-    fig_name = f"Regression_loss_{variables_string}.png"
+    fig_name = f"lossplot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
 def print_flags():
@@ -284,6 +285,11 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
+    parser.add_argument('--impression_filter', type=int, default=1,
+      help='If true, filter low impression instances out')
+    parser.add_argument('--plotting', type=int, default=1,
+      help='if true, plots are saved')
+
 
 
 
@@ -292,6 +298,8 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
+    FLAGS.impression_filter = bool(FLAGS.impression_filter)
+    FLAGS.plotting = bool(FLAGS.plotting)
 
     main()
 
