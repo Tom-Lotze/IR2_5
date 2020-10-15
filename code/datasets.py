@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 import itertools
+import torch
 
 class RankDataSet(Dataset):
     def __init__(self, dataset):
@@ -21,10 +22,10 @@ class RankDataSet(Dataset):
         # TODO concat all the datapoints
         indices = self.dataset.ranges[index]
         labels = [self.dataset.engagement_lvls[i] for i in indices]
-        labels = torch.tensor(n_answers).reshape(-1,1)
+        labels = torch.tensor(labels).reshape(-1,1)
         
         answers = [self.dataset.answers[i] for i in indices]
-        n_answers = [sum(1 if i != "" for i in answer) for answer in answers]
+        n_answers = [sum(1 for i in answer if i != "") for answer in answers]
         n_answers = torch.tensor(n_answers).reshape(-1,1)
 
         query_len = [len(self.dataset.queries[i]) for i in indices]
@@ -33,8 +34,8 @@ class RankDataSet(Dataset):
         question_len = [len(self.dataset.questions[i]) for i in indices]
         question_len = torch.tensor(n_answers).reshape(-1,1)
 
-        click_probs = [len(self.dataset.click_probs[i]) for i in indices]
-        click_probs = torch.tensor(n_answers).reshape(-1,5)
+        click_probs = [self.dataset.click_probs[i] for i in indices]
+        click_probs = torch.tensor(click_probs).reshape(-1,5)
 
         vectors = torch.cat((n_answers, query_len, question_len, click_probs), dim=1)
 

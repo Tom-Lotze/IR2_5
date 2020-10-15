@@ -9,16 +9,17 @@ from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 from sklearn.model_selection import train_test_split
 from copy import copy
+from dataloader import Data
 
 # Default constants
-DNN_HIDDEN_UNITS_DEFAULT = '256, 128, 32'
+DNN_HIDDEN_UNITS_DEFAULT = '32, 16'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 500
-BATCH_SIZE_DEFAULT = 200
+NR_EPOCHS_DEFAULT = 10
+BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
-DATA_DIR_DEFAULT = "dataloader/"
+DATA_DIR_DEFAULT = "Data/"
 
 
 def print_flags():
@@ -91,12 +92,12 @@ def train():
     valid_data.ranges = valid_ranges
     valid_data = RankDataSet(valid_data)
 
-    train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
-    valid_dl = DataLoader(valid_data, batch_size=64, shuffle=True, drop_last=True)
-    test_dl = DataLoader(test_data, batch_size=64, shuffle=True, drop_last=True)
+    train_dl = DataLoader(train_data, shuffle=True)
+    valid_dl = DataLoader(valid_data, shuffle=True)
+    test_dl = DataLoader(test_data, shuffle=True)
     
     # initialize MLP
-    nn = RankNet(, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
+    nn = RankNet(8, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
 
     # initialize optimizer
     if FLAGS.optimizer == "SGD":
@@ -130,8 +131,8 @@ def train():
                 continue
 
             # squeeze batch
-            x_batch = x_batch.float().squeeze()
-            y_batch = y_batch.float().t()
+            x_batch = x_batch.float().squeeze().to(device)
+            y_batch = y_batch.float().reshape(-1, 1).T.to(device)
 
             # construct labels matrix
             labels_mat = y_batch.t() - y_batch
@@ -140,8 +141,8 @@ def train():
             labels_mat[labels_mat < 0] = -1
 
             # perform forward pass and compute lambdas
-            scores = nn(x_batch)
-            diff_mat = torch.sigmoid(torch.add(scores.t(), -scores))
+            scores = nn(x_batch).to(device)
+            diff_mat = torch.sigmoid(torch.add(scores.T, -scores))
 
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
             lambda_i = lambda_ij.sum(dim=0)
@@ -180,7 +181,7 @@ if __name__ == '__main__':
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
-    parser.add_argument('--filename', type=str, default="dataset_filename=MIMICS-ClickExplore.tsv_expanded=True_balance=False_impression=False_reduced_classes=False_embedder=Bert.p",
+    parser.add_argument('--filename', type=str, default="dataset.p",
                         help='Filename of the data')
 
     FLAGS, unparsed = parser.parse_known_args()
