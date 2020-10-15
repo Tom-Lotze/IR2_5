@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 22:09
+# @Last Modified time: 2020-10-15 22:36
 
 
 import argparse
@@ -176,8 +176,7 @@ def train():
     test_loss, test_pred, test_true = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose, return_preds=True)
 
     # save the test predictions of the regressor
-    with open(f"Predictions/regression_test_preds.pt", "wb") as f:
-        pkl.dump(test_pred, f)
+    with open(f"Predictions/regression_test_preds{FLAGS.embedder}_{FLAGS.reduced_classes}_{FLAGS.impression}.pt", "wb") as f:
 
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
 

@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 22:31
+# @Last Modified time: 2020-10-15 22:35
 
 
 import argparse
@@ -192,7 +192,7 @@ def train():
         return_preds=True)
 
     # save the test predictions of the classifier
-    with open(f"Predictions/classification_test_preds.pt", "wb") as f:
+    with open(f"Predictions/classification_test_preds{FLAGS.embedder}_{FLAGS.reduced_classes}_{FLAGS.impression}.pt", "wb") as f:
         pkl.dump(test_pred, f)
 
     print(f"Loss & accuracy on test set: {test_loss}, {test_acc}")
