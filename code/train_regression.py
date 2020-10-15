@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-15 21:41
+# @Last Modified time: 2020-10-15 21:48
 
 
 import argparse
@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import pickle as pkl
 from collections import Counter
+from scipy.stats import ttest_rel
 
 
 # Default constants
