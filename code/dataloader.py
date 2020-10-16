@@ -193,7 +193,7 @@ def load(FLAGS):
                             n_hidden=[300,32], dropout_percentages=[0.0,0.0], 
                             n_classes=1, 
                             batchnorm=True)
-            nn.load_state_dict(torch.load("Models/Regression_Bert_SGD_0.0001_1e-05_300, 32_0.0, 0.0_True_40.pt"))
+            nn.load_state_dict(torch.load("Models/Best_regression_model.pt"))
             nn.eval()
             with torch.no_grad():
                 preds = nn(input_matrix).squeeze()

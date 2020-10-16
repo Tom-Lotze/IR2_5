@@ -22,31 +22,38 @@ NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
 
 def dcg_at_k(sorted_labels, k):
-	if k > 0:
-		k = min(sorted_labels.shape[0], k)
-	else:
-		k = sorted_labels.shape[0]
-	denom = 1./np.log2(np.arange(k)+2.)
-	nom = 2**sorted_labels-1.
-	dcg = np.sum(nom[:k]*denom)
-	return dcg
+    """ 
+    Get the dcg at k, if k = 0 get the whole dcg.
+    """
+    if k > 0:
+        k = min(sorted_labels.shape[0], k)
+    else:
+        k = sorted_labels.shape[0]
+    denom = 1./np.log2(np.arange(k)+2.)
+    nom = 2**sorted_labels-1.
+    dcg = np.sum(nom[:k]*denom)
+    return dcg
 
 def ndcg_at_k(sorted_labels, ideal_labels, k):
-	return dcg_at_k(sorted_labels, k) / dcg_at_k(ideal_labels, k)
+    """ 
+    Get the ndcg at k, if k = 0 get the whole ndcg.
+    """
+    return dcg_at_k(sorted_labels, k) / dcg_at_k(ideal_labels, k)
 
 def evaluate_ndcg_at_k(labels, scores, k):
-  labels, scores = np.array(labels).flatten(), np.array(scores).flatten()
-  random_i = np.random.permutation(np.arange(scores.shape[0]))
-  labels = labels[random_i]
-  scores = scores[random_i]
-  
-  sort_ind = np.argsort(scores)[::-1]
-  sorted_labels = labels[sort_ind]
-  ideal_labels = np.sort(labels)[::-1]
-
-  return ndcg_at_k(sorted_labels, ideal_labels, k)
-
-
+    """ 
+    Preprocessing steps to get the ndcg such as sorting the labels and flatting arrays.
+    """
+    labels, scores = np.array(labels).flatten(), np.array(scores).flatten()
+    random_i = np.random.permutation(np.arange(scores.shape[0]))
+    labels = labels[random_i]
+    scores = scores[random_i]
+    
+    sort_ind = np.argsort(scores)[::-1]
+    sorted_labels = labels[sort_ind]
+    ideal_labels = np.sort(labels)[::-1]
+    
+    return ndcg_at_k(sorted_labels, ideal_labels, k)
 
 
 def print_flags():
@@ -128,7 +135,7 @@ def train():
     else:
       input_size = 9
 
-    variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
     
     # initialize MLP
     nn = RankNet(input_size, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
@@ -176,6 +183,7 @@ def train():
 
             # ignore batch if only one doc (no pairs)
             if num_docs == 1:
+                print("Query with only a single question found")
                 continue
 
             # squeeze batch
@@ -296,7 +304,7 @@ if __name__ == '__main__':
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
-    parser.add_argument('--filename', type=str, default="dataset.p",
+    parser.add_argument('--filename', type=str, default="dataset_filename=MIMICS-ClickExplore.tsv_expanded=True_balance=False_impression=False_reduced_classes=False_embedder=Bert.p",
                         help='Filename of the data')
     parser.add_argument('--use_preds', type=int, default=0,
       help='Use the predictions in the ranker')
