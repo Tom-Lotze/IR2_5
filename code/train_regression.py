@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:21
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-14 16:27
+# @Last Modified time: 2020-10-15 22:36
 
 
 import argparse
@@ -13,12 +13,15 @@ import torch
 from torch.utils.data import DataLoader, random_split
 import matplotlib.pyplot as plt
 import pickle as pkl
+from collections import Counter
+from scipy.stats import ttest_rel
+
 
 # Default constants
 DNN_HIDDEN_UNITS_DEFAULT = '300, 32'
 DROPOUT_DEFAULT = '0.0, 0.0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 40
+NR_EPOCHS_DEFAULT = 30
 BATCH_SIZE_DEFAULT = 64
 EVAL_FREQ_DEFAULT = 100
 NEG_SLOPE_DEFAULT = 0.02
@@ -62,7 +65,7 @@ def train():
     print("Device :", device)
 
     # extract all data and divide into train, valid and split dataloaders
-    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression_filter}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    dataset_filename = f"dataset_filename=MIMICS-Click.tsv_expanded=False_balance=True_impression={FLAGS.impression}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
     with open(os.path.join(FLAGS.data_dir, dataset_filename), "rb") as f:
         dataset = pkl.load(f)
 
@@ -76,6 +79,9 @@ def train():
     train_dl = DataLoader(train_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     valid_dl = DataLoader(valid_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
     test_dl = DataLoader(test_data, batch_size=FLAGS.batch_size, shuffle=True, drop_last=True)
+
+    with open(f"{FLAGS.data_dir}/test_dl.pt", "wb") as f:
+        pkl.dump(test_dl, f)
 
 
      # initialize MLP and loss function
@@ -113,7 +119,7 @@ def train():
 
 
     # construct name for saving models and figures
-    variables_string = f"regression_{FLAGS.embedder}_{FLAGS.impression_filter}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
+    variables_string = f"regression_{FLAGS.embedder}_{FLAGS.impression}_{FLAGS.reduced_classes}_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}"
 
     overall_batch = 0
     min_valid_loss = 10000
@@ -167,19 +173,65 @@ def train():
     optimal_nn.load_state_dict(torch.load(f"Models/Regression_{variables_string}.pt"))
 
 
-    test_loss = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose)
+    test_loss, test_pred, test_true = eval_on_test(optimal_nn, loss_function, test_dl, device, verbose=FLAGS.verbose, return_preds=True)
+
+    # save the test predictions of the regressor
+    with open(f"Predictions/regression_test_preds{FLAGS.embedder}_{FLAGS.reduced_classes}_{FLAGS.impression}.pt", "wb") as f:
 
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
+
+    significance_testing(test_pred, test_true, loss_function, FLAGS)
 
     if FLAGS.plotting:
         plotting(training_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS)
 
 
 
-def eval_on_test(nn, loss_function, dl, device, verbose=False):
+def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
+
+    print("\nImpression:", FLAGS.impression)
+    print("Reduced Classes:", FLAGS.reduced_classes)
+
+    print("Engagement levels:", Counter(test_labels))
+    print(f"Total number of engagement levels: {len(test_labels)}\n")
+
+    test_labels = torch.tensor(test_labels)
+    test_preds = torch.tensor(test_preds)
+    mean_eng = torch.mean(test_labels)
+    median_eng = torch.median(test_labels)
+    mode_eng = torch.mode(test_labels)[0]
+
+    print(f"mean, median, mode: {mean_eng}, {median_eng}, {mode_eng}")
+
+
+    mean = torch.full_like(test_labels, mean_eng)
+    median = torch.full_like(test_labels, median_eng)
+    mode = torch.full_like(test_labels, mode_eng)
+
+    print("shapes", mean.shape, test_preds.shape, test_labels.shape)
+
+    MSE_mean = loss_fn(mean, test_labels)
+    MSE_median = loss_fn(median, test_labels)
+    MSE_mode = loss_fn(mode, test_labels)
+
+    t_mean, p_mean = ttest_rel(mean, test_preds)
+    t_median, p_median = ttest_rel(median, test_preds)
+    t_mode, p_mode = ttest_rel(mode, test_preds)
+
+
+    print(f"MSE mean Loss: {MSE_mean}, p-value: {p_mean}")
+    print(f"MSE median Loss: {MSE_median}, p-value: {p_median}")
+    print(f"MSE mode Loss: {MSE_mode}, p-value: {p_mode}")
+
+
+
+def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=False):
     """
     Find the accuracy and loss on the test set, given the current weights
     """
+    all_predictions = []
+    all_labels = []
+
     nn.eval()
     if verbose:
         print(f"neural net:\n {[param.data for param in nn.parameters()]}")
@@ -197,10 +249,19 @@ def eval_on_test(nn, loss_function, dl, device, verbose=False):
 
             losses.append(loss.item())
 
+            if return_preds:
+                all_predictions.extend(test_pred.squeeze().tolist())
+                all_labels.extend(y.squeeze().tolist())
+
             if verbose and i == 0:
                 print(test_pred)
 
-    return np.mean(losses)
+    mean_losses = np.mean(losses)
+
+    if not return_preds:
+        return mean_losses
+
+    return mean_losses, all_predictions, all_labels
 
 
 def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS):
@@ -268,9 +329,9 @@ if __name__ == '__main__':
       help='Directory for storing input data')
     parser.add_argument('--neg_slope', type=float, default=NEG_SLOPE_DEFAULT,
       help='Negative slope parameter for LeakyReLU')
-    parser.add_argument('--optimizer', type=str, default="SGD",
+    parser.add_argument('--optimizer', type=str, default="Adam",
       help='Type of optimizer')
-    parser.add_argument('--amsgrad', type=int, default=0,
+    parser.add_argument('--amsgrad', type=int, default=1,
                         help='Boolean: Amsgrad for Adam and Adamw')
     parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
@@ -285,7 +346,7 @@ if __name__ == '__main__':
       help='print neural net and predictions')
     parser.add_argument('--reduced_classes', type=int, default=0,
       help='Use only 2 class dataset')
-    parser.add_argument('--impression_filter', type=int, default=1,
+    parser.add_argument('--impression', type=int, default=1,
       help='If true, filter low impression instances out')
     parser.add_argument('--plotting', type=int, default=1,
       help='if true, plots are saved')
@@ -298,7 +359,7 @@ if __name__ == '__main__':
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.verbose = bool(FLAGS.verbose)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
-    FLAGS.impression_filter = bool(FLAGS.impression_filter)
+    FLAGS.impression = bool(FLAGS.impression)
     FLAGS.plotting = bool(FLAGS.plotting)
 
     main()

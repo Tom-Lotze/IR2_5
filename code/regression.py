@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-09-18 11:18
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-09-30 12:27
+# @Last Modified time: 2020-10-15 21:47
 
 import torch
 import torch.nn as nn
@@ -16,7 +16,7 @@ class Regression(nn.Module):
   """
 
   def __init__(self, n_inputs, n_hidden, dropout_percentages, n_classes=1,
-               neg_slope=0.02, batchnorm=False):
+               neg_slope=0.02, batchnorm=True):
     """
     Initializes Regression object.
 
@@ -55,7 +55,7 @@ class Regression(nn.Module):
 
   def forward(self, x):
     """
-    Performs forward pass of the input. Here an input tensor x is transformed 
+    Performs forward pass of the input. Here an input tensor x is transformed
     through several layer transformations.
 
     Args:
