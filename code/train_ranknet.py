@@ -17,7 +17,7 @@ DNN_HIDDEN_UNITS_DEFAULT = '32, 16'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
 NR_EPOCHS_DEFAULT = 5
-EVAL_FREQ_DEFAULT = 15000
+EVAL_FREQ_DEFAULT = 5000
 NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
 
@@ -131,9 +131,9 @@ def train():
 
 
     if FLAGS.use_preds:
-      input_size = 10
-    else:
       input_size = 9
+    else:
+      input_size = 8
 
     variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
     
