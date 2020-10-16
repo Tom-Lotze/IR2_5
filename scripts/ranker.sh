@@ -16,7 +16,7 @@ mkdir -p Images
 echo "Ranker started running" | mail $USER
 
 python code/test_cuda_print.py
-python code/train_ranknet.py --plotting 1
+python code/train_ranknet.py --plotting 1 --use_preds 1
 
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
