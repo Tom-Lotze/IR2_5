@@ -34,7 +34,10 @@ FLAGS = None
 def get_accuracy(pred, y, verbose=False):
     with torch.no_grad():
         B = pred.shape[0]
-        max_index = pred.max(dim = 1)[1]
+        try:
+            max_index = pred.max(dim = 1)[1]
+        except:
+            max_index = pred
         if verbose:
             print(max_index)
         count = (max_index == y).sum().item()
@@ -143,8 +146,8 @@ def train():
         for batch, (x, y) in enumerate(train_dl):
 
             # squeeze the input, and put on device
-            x = x.reshape(x.shape[0], -1).to(device)
-            y = y.reshape(y.shape[0], -1).long().squeeze().to(device)
+            x = x.to(device)
+            y = y.long().squeeze().to(device)
 
             optimizer.zero_grad()
 
@@ -228,7 +231,7 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
 
     print("shapes", median.shape, test_preds.shape, test_labels.shape)
 
-    print(test_preds[:50])
+    print(test_preds[:10])
 
     MSE_median = loss_fn(median_one_hot, test_labels)
     MSE_mode = loss_fn(mode_one_hot, test_labels)
@@ -238,6 +241,11 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
 
     print(f"MSE median Loss: {MSE_median}, p-value: {p_median}")
     print(f"MSE mode Loss: {MSE_mode}, p-value: {p_mode}")
+
+    acc_median = get_accuracy(median, test_labels)
+    acc_mode = get_accuracy(mode, test_labels)
+    print(f"acc median: {acc_median}\nacc mode: {acc_mode}")
+
 
 
 def eval_on_test(nn, loss_function, dl, device, verbose=False, return_preds=False):

@@ -177,6 +177,7 @@ def train():
 
     # save the test predictions of the regressor
     with open(f"Predictions/regression_test_preds{FLAGS.embedder}_{FLAGS.reduced_classes}_{FLAGS.impression}.pt", "wb") as f:
+        pkl.dump(test_pred, f)
 
     print(f"Loss on test set of optimal model (batch {optimal_batch}): {test_loss}")
 
@@ -191,6 +192,7 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
 
     print("\nImpression:", FLAGS.impression)
     print("Reduced Classes:", FLAGS.reduced_classes)
+    print(f"Embedder: {FLAGS.embedder}")
 
     print("Engagement levels:", Counter(test_labels))
     print(f"Total number of engagement levels: {len(test_labels)}\n")
@@ -203,13 +205,14 @@ def significance_testing(test_preds, test_labels, loss_fn, FLAGS):
 
     print(f"mean, median, mode: {mean_eng}, {median_eng}, {mode_eng}")
 
-
     mean = torch.full_like(test_labels, mean_eng)
     median = torch.full_like(test_labels, median_eng)
     mode = torch.full_like(test_labels, mode_eng)
 
     print("shapes", mean.shape, test_preds.shape, test_labels.shape)
 
+    Model_MSE = loss_fn(test_preds.unsqueeze(1), test_labels.unsqueeze(1))
+    print(f"Model loss: {Model_MSE}")
     MSE_mean = loss_fn(mean, test_labels)
     MSE_median = loss_fn(median, test_labels)
     MSE_mode = loss_fn(mode, test_labels)

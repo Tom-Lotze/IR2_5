@@ -16,9 +16,16 @@ mkdir -p Predictions
 
 echo "Regression started running" | mail $USER
 
-
-python code/train_regression.py
-
+for emb in "Bert"
+do
+  for imp in 0 1
+  do
+    for rc in 0 1
+    do
+      python code/train_regression.py --embedder "$emb" --impression "$imp" --reduced_classes "$rc"
+    done
+  done
+done
 cp -r Models/* $HOME/IR2_5/Models/
 cp -r Images/* $HOME/IR2_5/Images/
 cp -r Predictions/* $HOME/IR2_5/Predictions/
