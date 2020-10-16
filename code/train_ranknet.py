@@ -176,6 +176,7 @@ def train():
 
             # ignore batch if only one doc (no pairs)
             if num_docs == 1:
+                print("Query with only a single question found")
                 continue
 
             # squeeze batch
