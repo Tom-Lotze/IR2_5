@@ -38,21 +38,21 @@ class Data():
         self.click_probs = click_probs
         self.predictions = predictions
 
-        self.ranges = self.get_ranges(self.queries)
+        self.ranges = get_ranges(self.queries)
 
-    def get_ranges(self, queries):
-        """
-        Get ranges of what queries should be together.
+def get_ranges(queries):
+    """
+    Get ranges of what queries should be together.
 
-        Args:
-            queries: the queries in string form
-        Returns:
-            out: a list of list with all indices of the same query in a sublist
-        """
-        indices = defaultdict(list)
-        for i, q in enumerate(queries):
-            indices[q].append(i)
-        return list(indices.values())
+    Args:
+        queries: the queries in string form
+    Returns:
+        out: a list of list with all indices of the same query in a sublist
+    """
+    indices = defaultdict(list)
+    for i, q in enumerate(queries):
+        indices[q].append(i)
+    return list(indices.values())
 
 def load(FLAGS):
     """
@@ -120,6 +120,22 @@ def load(FLAGS):
         impression_lvls = [impression_lvls[i] for i in indices]
         engagement_lvls = [engagement_lvls[i] for i in indices]
         click_probs = [click_probs[i] for i in indices]
+    
+    # TODO SAMPLE HERE
+
+    if FLAGS.expanded and FLAGS.negative_samples:
+        n_questions = len(questions)
+        ranges = get_ranges(queries)
+        for r in ranges:
+            query = queries[r[0]]
+            queries.extend([query] * FLAGS.sample_size)
+            sampled_question_indices = np.random.choice([i for i in range(n_questions) if i not in r], FLAGS.sample_size, replace=False)
+            questions.extend([questions[i] for i in sampled_question_indices])
+            answers.extend([answers[i] for i in sampled_question_indices])
+            impression_lvls.extend([impression_lvls[i] for i in sampled_question_indices])
+            engagement_lvls.extend([0] * FLAGS.sample_size)
+            click_probs.extend([click_probs[i] for i in sampled_question_indices])
+
 
     # Flatten to load into embedder
     answers = [i for sublist in answers for i in sublist]
@@ -149,7 +165,7 @@ def load(FLAGS):
         # initialize the vectorized
         if FLAGS.expanded:
             with open(f"{FLAGS.folder}TFIDF_vocab.p") as f:
-                vocab = pickle.load(f)
+                vocab = pkl.load(f)
             vectorizer = TfidfVectorizer()
         else:
             vectorizer = TfidfVectorizer()
@@ -257,12 +273,17 @@ if __name__ == "__main__":
                         help='Either consider 11 classes, or 2 (binary case)')
     parser.add_argument('--embedder', type=str, default="Bert",
                         help='Type of embedding use to represent sentence, either Bert or TFIDF')
+    parser.add_argument('--negative_samples', type=int, default=1,
+                        help='Use negative sampling to get a better reading out of the ranker')
+    parser.add_argument('--sample_size', type=int, default=10,
+                        help='Number of negative samples to use')
 
     FLAGS, unparsed = parser.parse_known_args()
     FLAGS.expanded = bool(FLAGS.expanded)
     FLAGS.balance = bool(FLAGS.balance)
     FLAGS.impression = bool(FLAGS.impression)
     FLAGS.reduced_classes = bool(FLAGS.reduced_classes)
+    FLAGS.negative_samples = bool(FLAGS.negative_samples)
 
     load(FLAGS)
 
