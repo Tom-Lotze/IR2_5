@@ -126,16 +126,19 @@ def load(FLAGS):
         engagement_lvls = [engagement_lvls[i] for i in indices]
         click_probs = [click_probs[i] for i in indices]
     
-    # TODO SAMPLE HERE
 
     if FLAGS.expanded and FLAGS.negative_samples:
+        # Get values for sampling
         n_questions = len(questions)
         ranges = get_ranges(queries)
         sampled_question_indices = []
 
         for r in ranges:
+            # Negative samples for each query range
             samples = np.random.choice([i for i in range(n_questions) if i not in r], FLAGS.sample_size, replace=False)
             sampled_question_indices.append(samples)
+
+            # Update the engagement levels to 2 for max engagement and 1 for other
             max_engagement = np.max([engagement_lvls[i] for i in r])
             for i in r:
                 if engagement_lvls[i] == max_engagement:
@@ -174,11 +177,12 @@ def load(FLAGS):
         answers = list(zip(*[iter(answers)]*5))
 
         if FLAGS.expanded and FLAGS.negative_samples:
+            # Make list to extend the embeddings
             answer_embeds = list(answer_embeds.reshape(query_embeds.shape[0], -1))
             question_embeds = list(question_embeds)
             query_embeds = list(query_embeds)
             
-
+            # Extend the data with the negative samples
             for r, samples in zip(ranges, sampled_question_indices):
                 queries.extend([queries[r[0]]] * len(samples))
                 questions.extend([questions[i] for i in samples])
@@ -190,6 +194,7 @@ def load(FLAGS):
                 question_embeds.extend([question_embeds[i] for i in samples])
                 answer_embeds.extend([answer_embeds[i] for i in samples])
 
+            # Turn the embeddings back to torch tensors
             query_embeds = torch.stack(query_embeds)
             question_embeds = torch.stack(question_embeds)
             answer_embeds = torch.stack(answer_embeds)
@@ -207,6 +212,7 @@ def load(FLAGS):
             vectorizer = TfidfVectorizer()
 
         if FLAGS.expanded and FLAGS.negative_samples:
+            # Extend the data with the negative samples
             for r, samples in zip(ranges, sampled_question_indices):
                 queries.extend([queries[r[0]]] * len(samples))
                 questions.extend([questions[i] for i in samples])
