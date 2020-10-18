@@ -304,7 +304,7 @@ if __name__ == '__main__':
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
-    parser.add_argument('--filename', type=str, default="dataset_filename=MIMICS-ClickExplore.tsv_expanded=True_balance=False_impression=False_reduced_classes=False_embedder=Bert.p",
+    parser.add_argument('--filename', type=str, default="dataset_filename=MIMICS-ClickExplore.tsv_expanded=True_balance=False_impression=False_reduced_classes=False_embedder=Bert_negative_samples=True.p",
                         help='Filename of the data')
     parser.add_argument('--use_preds', type=int, default=0,
       help='Use the predictions in the ranker')
