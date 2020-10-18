@@ -67,7 +67,7 @@ def load(FLAGS):
 
     np.random.seed(42)
 
-    filename_dataset = f"Data/dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}.p"
+    filename_dataset = f"Data/dataset_filename={FLAGS.filename}_expanded={FLAGS.expanded}_balance={FLAGS.balance}_impression={FLAGS.impression}_reduced_classes={FLAGS.reduced_classes}_embedder={FLAGS.embedder}_negative_samples={FLAGS.negative_samples}.p"
 
     # Check if loadable file exists
     if not os.path.exists(FLAGS.folder):
@@ -136,6 +136,12 @@ def load(FLAGS):
         for r in ranges:
             samples = np.random.choice([i for i in range(n_questions) if i not in r], FLAGS.sample_size, replace=False)
             sampled_question_indices.append(samples)
+            max_engagement = np.max([engagement_lvls[i] for i in r])
+            for i in r:
+                if engagement_lvls[i] == max_engagement:
+                    engagement_lvls[i] = 2
+                else:
+                    engagement_lvls[i] = 1
 
 
     # set language model
