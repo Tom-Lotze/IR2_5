@@ -75,6 +75,8 @@ def load(FLAGS):
     if not os.path.exists(FLAGS.folder+FLAGS.filename):
         raise OSError(f"File {FLAGS.folder+FLAGS.filename} does not exist")
 
+    N = 500
+
     with open(FLAGS.folder+FLAGS.filename) as tsvfile:
         tsvreader = csv.reader(tsvfile, delimiter="\t")
         # skip the first line (consists of labels)
@@ -84,6 +86,9 @@ def load(FLAGS):
             # skip the instances that have a low impression level
             if FLAGS.impression and line[7] == "low":
                 continue
+
+            # if i == N:
+            #     break
 
             # Add values to the data lists
             queries.append(line[0])
@@ -126,23 +131,18 @@ def load(FLAGS):
     if FLAGS.expanded and FLAGS.negative_samples:
         n_questions = len(questions)
         ranges = get_ranges(queries)
+        sampled_question_indices = []
+
         for r in ranges:
-            query = queries[r[0]]
-            queries.extend([query] * FLAGS.sample_size)
-            sampled_question_indices = np.random.choice([i for i in range(n_questions) if i not in r], FLAGS.sample_size, replace=False)
-            questions.extend([questions[i] for i in sampled_question_indices])
-            answers.extend([answers[i] for i in sampled_question_indices])
-            impression_lvls.extend([impression_lvls[i] for i in sampled_question_indices])
-            engagement_lvls.extend([0] * FLAGS.sample_size)
-            click_probs.extend([click_probs[i] for i in sampled_question_indices])
+            samples = np.random.choice([i for i in range(n_questions) if i not in r], FLAGS.sample_size, replace=False)
+            sampled_question_indices.append(samples)
 
-
-    # Flatten to load into embedder
-    answers = [i for sublist in answers for i in sublist]
-    click_probs = [i for sublist in click_probs for i in sublist]
 
     # set language model
     if FLAGS.embedder == "Bert":
+        # Flatten to load into embedder
+        answers = [i for sublist in answers for i in sublist]
+
         embedder = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
         question_embeds = embedder.encode(questions, convert_to_tensor=False,
@@ -157,21 +157,60 @@ def load(FLAGS):
                                         show_progress_bar=True, batch_size=128,
                                         num_workers = 4)
 
-        question_embeds = torch.from_numpy(question_embeds)
         query_embeds = torch.from_numpy(query_embeds)
+        question_embeds = torch.from_numpy(question_embeds)
         answer_embeds = torch.from_numpy(answer_embeds)
+
+        print(query_embeds.shape)
+        print(question_embeds.shape)
+        print(answer_embeds.shape)
+
+        answers = list(zip(*[iter(answers)]*5))
+
+        if FLAGS.expanded and FLAGS.negative_samples:
+            answer_embeds = list(answer_embeds.reshape(query_embeds.shape[0], -1))
+            question_embeds = list(question_embeds)
+            query_embeds = list(query_embeds)
+            
+
+            for r, samples in zip(ranges, sampled_question_indices):
+                queries.extend([queries[r[0]]] * len(samples))
+                questions.extend([questions[i] for i in samples])
+                answers.extend([answers[i] for i in samples])
+                impression_lvls.extend([impression_lvls[i] for i in samples])
+                engagement_lvls.extend([0] * len(samples))
+                click_probs.extend([click_probs[i] for i in samples])
+                query_embeds.extend([query_embeds[r[0]]] * len(samples))
+                question_embeds.extend([question_embeds[i] for i in samples])
+                answer_embeds.extend([answer_embeds[i] for i in samples])
+
+            query_embeds = torch.stack(query_embeds)
+            question_embeds = torch.stack(question_embeds)
+            answer_embeds = torch.stack(answer_embeds)
+            print(query_embeds.shape)
+            print(question_embeds.shape)
+            print(answer_embeds.shape)
 
     elif FLAGS.embedder == "TFIDF":
         # initialize the vectorized
         if FLAGS.expanded:
             with open(f"{FLAGS.folder}TFIDF_vocab.p") as f:
                 vocab = pkl.load(f)
-            vectorizer = TfidfVectorizer()
+            vectorizer = TfidfVectorizer(vocabulary=vocab)
         else:
             vectorizer = TfidfVectorizer()
 
+        if FLAGS.expanded and FLAGS.negative_samples:
+            for r, samples in zip(ranges, sampled_question_indices):
+                queries.extend([queries[r[0]]] * len(samples))
+                questions.extend([questions[i] for i in samples])
+                answers.extend([answers[i] for i in samples])
+                impression_lvls.extend([impression_lvls[i] for i in samples])
+                engagement_lvls.extend([0] * len(samples))
+                click_probs.extend([click_probs[i] for i in samples])
+
         # create the corpus: a list of string, each string is a data instance
-        corpus = [" ".join([queries[i], questions[i], " ".join(answers[i*5:i*5+5])]) for i in range(len(queries))]
+        corpus = [" ".join([queries[i], questions[i], " ".join(answers[i])]) for i in range(len(queries))]
 
         # this yields a sparse vector
         X = vectorizer.fit_transform(corpus)
@@ -194,9 +233,6 @@ def load(FLAGS):
     # either return the dataset for regression, with only questios, queries
     # and answers, or return with all attributes
     if FLAGS.expanded:
-        answers = list(zip(*[iter(answers)]*5))
-        click_probs = list(zip(*[iter(click_probs)]*5))
-
         # TODO
         # if statement if TFIDF or BERT
         # load neural net and perform forward pass on the data, yielding the predicted engagement levels

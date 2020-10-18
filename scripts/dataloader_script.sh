@@ -14,6 +14,7 @@ cd $TMPDIR/IR2_5
 
 echo "Dataloader started running" | mail $USER
 
+python code/test_cuda_print.py
 python code/dataloader.py --expanded 1 --balance 0 --impression 0 \
     --embedder Bert --reduced_classes 0
 
