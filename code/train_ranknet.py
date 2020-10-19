@@ -241,7 +241,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     plt.plot(steps, train_losses, '-', lw=2, label="Training NDCG")
     plt.plot(steps, valid_losses, '-', lw=3, label="Validation NDCG")
     plt.axhline(test_loss, label="Test NDCG", color="red", lw=3)
-    plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
+    # plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
     # plt.title('Losses over training, including final test loss using optimal model')
 
 
