@@ -198,6 +198,11 @@ def train():
 
             # perform forward pass and compute lambdas
             scores = nn(x_batch).to(device)
+            print("Batch:", overall_batch)
+            print("Max:", np.max(scores.detach().cpu().flatten().numpy()), "Min:", np.min(scores.detach().cpu().flatten().numpy()))
+            print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
+            if np.isnan(scores.detach().cpu().flatten().numpy()).any():
+              return
             diff_mat = torch.sigmoid(torch.add(scores.T, -scores))
 
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
@@ -226,7 +231,7 @@ def train():
     test_loss = eval_on_test(nn, test_dl, device)
 
     if FLAGS.plotting:
-        optimal_batch = 0 
+        optimal_batch = 0
         plotting(training_ndcgs, valid_ndcgs, test_loss, variables_string, optimal_batch, FLAGS)
 
 def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS):

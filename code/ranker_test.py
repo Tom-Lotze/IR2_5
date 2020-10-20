@@ -41,6 +41,7 @@ def eval_random(dl):
     ndcgs = []
     for _, labels in dl:
         labels = labels.float().reshape(-1, 1)
+        print(labels)
         ndcg = evaluate_ndcg_at_k(labels.cpu(), np.random.rand(len(labels)), 0)
 
         ndcgs.append(ndcg)
