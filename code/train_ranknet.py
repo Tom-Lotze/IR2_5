@@ -294,11 +294,11 @@ if __name__ == '__main__':
       help='Directory for storing input data')
     parser.add_argument('--neg_slope', type=float, default=NEG_SLOPE_DEFAULT,
       help='Negative slope parameter for LeakyReLU')
-    parser.add_argument('--optimizer', type=str, default="SGD",
+    parser.add_argument('--optimizer', type=str, default="Adam",
       help='Type of optimizer')
-    parser.add_argument('--amsgrad', type=int, default=0,
+    parser.add_argument('--amsgrad', type=int, default=1,
                         help='Boolean: Amsgrad for Adam and Adamw')
-    parser.add_argument('--batchnorm', type=int, default=0,
+    parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
     parser.add_argument('--weightdecay', type=float, default=0,
       help='weight decay for optimizer')
