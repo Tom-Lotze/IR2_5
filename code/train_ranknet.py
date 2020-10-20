@@ -131,11 +131,11 @@ def train():
 
 
     if FLAGS.use_preds:
-      input_size = 10
+      input_size = 6
     else:
-      input_size = 9
+      input_size = 5
 
-    variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
+    variables_string = f"ranking_sanity_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
     
     # initialize MLP
     nn = RankNet(input_size, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
@@ -221,7 +221,7 @@ def train():
             
             overall_batch += 1
 
-    torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")        
+    torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")
     
     test_loss = eval_on_test(nn, test_dl, device)
 
@@ -244,7 +244,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     # plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
     # plt.title('Losses over training, including final test loss using optimal model')
 
-    plt.ylim((0.46, 0.52))
+    # plt.ylim((0.46, 0.52))
     plt.xlabel('Batch')
     plt.ylabel('NDCG')
     plt.grid(True)

@@ -39,10 +39,10 @@ class RankDataSet(Dataset):
         question_len = [len(self.dataset.questions[i]) for i in indices]
         question_len = torch.tensor(question_len).reshape(-1,1)
 
-        click_probs = [self.dataset.click_probs[i] for i in indices]
-        click_probs = torch.tensor(click_probs).reshape(-1,5)
+        # click_probs = [self.dataset.click_probs[i] for i in indices]
+        # click_probs = torch.tensor(click_probs).reshape(-1,5)
 
-        vectors = torch.cat((n_answers, query_len, question_len, avg_answer_len, click_probs), dim=1)
+        vectors = torch.cat((n_answers, query_len, question_len, avg_answer_len, labels), dim=1)
 
         if self.use_preds:
             preds = [self.dataset.predictions[i] for i in indices]
