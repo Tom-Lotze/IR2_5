@@ -14,19 +14,19 @@ class RankDataSet(Dataset):
         self.labels = torch.tensor(self.dataset.engagement_lvls).reshape(-1,1)
         
         self.n_answers = [sum(1 for i in answer if i != "") for answer in self.dataset.answers]
-        self.n_answers = torch.tensor(n_answers).reshape(-1,1)
+        self.n_answers = torch.tensor(self.n_answers).float().reshape(-1,1)
         self.n_answers = self.n_answers - self.n_answers.mean()
 
         self.avg_answer_len = [np.mean([len(i) for i in answer]) for answer in self.dataset.answers]
-        self.avg_answer_len = torch.tensor(avg_answer_len).reshape(-1,1)
+        self.avg_answer_len = torch.tensor(self.avg_answer_len).float().reshape(-1,1)
         self.avg_answer_len = self.avg_answer_len - self.avg_answer_len.mean()
 
-        self.query_len = [len(query) for query in self.dataset.query]
-        self.query_len = torch.tensor(query_len).reshape(-1,1)
+        self.query_len = [len(query) for query in self.dataset.queries]
+        self.query_len = torch.tensor(self.query_len).float().reshape(-1,1)
         self.query_len = self.query_len - self.query_len.mean()
 
         self.question_len = [len(question) for question in self.dataset.questions]
-        self.question_len = torch.tensor(question_len).reshape(-1,1)
+        self.question_len = torch.tensor(self.question_len).float().reshape(-1,1)
         self.question_len = self.question_len - self.question_len.mean()
 
     def __len__(self):

@@ -327,5 +327,6 @@ if __name__ == '__main__':
     FLAGS.amsgrad = bool(FLAGS.amsgrad)
     FLAGS.batchnorm = bool(FLAGS.batchnorm)
     FLAGS.use_preds = bool(FLAGS.use_preds)
+    FLAGS.plotting = bool(FLAGS.plotting)
 
     main()
