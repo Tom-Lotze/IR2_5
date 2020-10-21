@@ -186,6 +186,8 @@ def train():
 
             # perform forward pass and compute lambdas
             scores = nn(x_batch).to(device)
+
+            scores = (scores - torch.mean(scores)) / torch.std(scores)
             # print("Batch:", overall_batch)
             # print("Max:", np.max(scores.detach().cpu().flatten().numpy()), "Min:", np.min(scores.detach().cpu().flatten().numpy()))
             # print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
@@ -200,7 +202,7 @@ def train():
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
             lambda_i = lambda_ij.sum(dim=0)
 
-            torch.nn.utils.clip_grad_norm_(nn.parameters(), max_norm=10.0)
+            # torch.nn.utils.clip_grad_norm_(nn.parameters(), max_norm=1.0)
 
             # perform backward pass and correct for number of pairs
             scores.squeeze().backward(lambda_i / num_pairs)
