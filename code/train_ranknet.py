@@ -186,9 +186,9 @@ def train():
 
             # perform forward pass and compute lambdas
             scores = nn(x_batch).to(device)
-            print("Batch:", overall_batch)
-            print("Max:", np.max(scores.detach().cpu().flatten().numpy()), "Min:", np.min(scores.detach().cpu().flatten().numpy()))
-            print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
+            # print("Batch:", overall_batch)
+            # print("Max:", np.max(scores.detach().cpu().flatten().numpy()), "Min:", np.min(scores.detach().cpu().flatten().numpy()))
+            # print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
             if np.isnan(scores.detach().cpu().flatten().numpy()).any():
               print([param for param in nn.parameters()])
               print("label mat", labels_mat)
@@ -215,7 +215,7 @@ def train():
             sorted_labels = labels[sort_ind]
             ideal_labels = np.sort(labels)[::-1]
             first_rel_rank = np.argmax(sorted_labels)
-            print(f"first rel rank: {first_rel_rank}")
+            # print(f"first rel rank: {first_rel_rank}")
             first_rel_ranks.append(first_rel_rank)
             ideal_labels = np.sort(labels)[::-1]
 
@@ -228,6 +228,7 @@ def train():
                 training_ndcgs.append(mean_training_ndcg)
                 training_ndcg = []
                 print(f"Training ndcg: {mean_training_ndcg} / Valid ndcg: {valid_ndcg}")
+                print(f"average MRR: {np.mean(first_rel_ranks)}")
 
                 #TODO Optimal model?
 
