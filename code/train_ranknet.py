@@ -231,8 +231,9 @@ def train():
             first_rel_rank = np.argmax(sorted_labels)
             print(f"first rel rank: {first_rel_rank}")
             first_rel_ranks.append(first_rel_rank)
+            ideal_labels = np.sort(labels)[::-1]
 
-            training_ndcg.append(ndcg_at_k(labels, scores, 0))
+            training_ndcg.append(ndcg_at_k(sorted_labels, ideal_labels, 0))
 
             if overall_batch % FLAGS.eval_freq == 0 and overall_batch != 0:
                 valid_ndcg = eval_on_test(nn, valid_dl, device)
