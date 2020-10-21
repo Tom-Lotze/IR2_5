@@ -213,6 +213,7 @@ def train():
 
             sort_ind = np.argsort(scores)[::-1]
             sorted_labels = labels[sort_ind]
+            ideal_labels = np.sort(labels)[::-1]
             first_rel_rank = np.argmax(sorted_labels)
             print(f"first rel rank: {first_rel_rank}")
             first_rel_ranks.append(first_rel_rank)
@@ -245,6 +246,9 @@ def train():
 
 def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_batch, FLAGS):
     plt.rcParams.update({"font.size": 22})
+
+    print(train_losses)
+    print(valid_losses)
 
     os.makedirs("Images", exist_ok=True)
 
@@ -294,10 +298,11 @@ def eval_on_test(nn, dl, device):
 
             sort_ind = np.argsort(scores)[::-1]
             sorted_labels = labels[sort_ind]
+            ideal_labels = np.sort(labels)[::-1]
             first_rel_rank = np.argmax(sorted_labels)
             first_rel_ranks.append(first_rel_rank)
 
-            ndcg = ndcg_at_k(labels, scores, 0)
+            ndcg = ndcg_at_k(sorted_labels, ideal_labels, 0)
 
             ndcgs.append(ndcg)
 
