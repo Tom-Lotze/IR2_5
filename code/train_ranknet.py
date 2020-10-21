@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 DNN_HIDDEN_UNITS_DEFAULT = '32, 16'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 5
+NR_EPOCHS_DEFAULT = 2
 EVAL_FREQ_DEFAULT = 5000
 NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
@@ -131,11 +131,11 @@ def train():
 
 
     if FLAGS.use_preds:
-      input_size = 6
-    else:
       input_size = 5
+    else:
+      input_size = 4
 
-    variables_string = f"ranking_sanity_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
+    variables_string = f"ranking_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
 
     # initialize MLP
     nn = RankNet(input_size, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
