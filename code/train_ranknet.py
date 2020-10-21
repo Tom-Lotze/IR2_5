@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 DNN_HIDDEN_UNITS_DEFAULT = '32, 16'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 2
+NR_EPOCHS_DEFAULT = 1
 EVAL_FREQ_DEFAULT = 5000
 NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
@@ -39,21 +39,6 @@ def ndcg_at_k(sorted_labels, ideal_labels, k):
     Get the ndcg at k, if k = 0 get the whole ndcg.
     """
     return dcg_at_k(sorted_labels, k) / dcg_at_k(ideal_labels, k)
-
-def evaluate_ndcg_at_k(labels, scores, k):
-    """
-    Preprocessing steps to get the ndcg such as sorting the labels and flatting arrays.
-    """
-    labels, scores = np.array(labels).flatten(), np.array(scores).flatten()
-    random_i = np.random.permutation(np.arange(scores.shape[0]))
-    labels = labels[random_i]
-    scores = scores[random_i]
-
-    sort_ind = np.argsort(scores)[::-1]
-    sorted_labels = labels[sort_ind]
-    ideal_labels = np.sort(labels)[::-1]
-
-    return ndcg_at_k(sorted_labels, ideal_labels, k)
 
 
 def print_flags():
