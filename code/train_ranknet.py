@@ -204,9 +204,12 @@ def train():
             print("Max:", np.max(scores.detach().cpu().flatten().numpy()), "Min:", np.min(scores.detach().cpu().flatten().numpy()))
             print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
             if np.isnan(scores.detach().cpu().flatten().numpy()).any():
-              return
               print([param for param in nn.parameters()])
               print("label mat", labels_mat)
+              print("diff matrix prev", diff_mat)
+              print("scores prev", scores)
+              return
+
             diff_mat = torch.sigmoid(torch.add(scores.T, -scores))
 
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
