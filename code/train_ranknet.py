@@ -130,9 +130,9 @@ def train():
     valid_ndcgs = []
     first_rel_ranks = []
 
-    initial_train_ndcg = eval_on_test(nn, train_dl, device)
+    initial_train_ndcg, _ = eval_on_test(nn, train_dl, device)
     training_ndcgs.append(initial_train_ndcg)
-    initial_valid_ndcg = eval_on_test(nn, valid_dl, device)
+    initial_valid_ndcg, _ = eval_on_test(nn, valid_dl, device)
     valid_ndcgs.append(initial_valid_ndcg)
 
     # initialize optimizer
@@ -222,7 +222,7 @@ def train():
             training_ndcg.append(ndcg_at_k(sorted_labels, ideal_labels, 0))
 
             if overall_batch % FLAGS.eval_freq == 0 and overall_batch != 0:
-                valid_ndcg = eval_on_test(nn, valid_dl, device)
+                valid_ndcg, valid_MRR = eval_on_test(nn, valid_dl, device)
                 valid_ndcgs.append(valid_ndcg)
                 mean_training_ndcg = np.mean(training_ndcg)
                 training_ndcgs.append(mean_training_ndcg)
