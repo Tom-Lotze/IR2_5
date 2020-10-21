@@ -143,6 +143,7 @@ def train():
     # initialization for plotting and metrics
     training_ndcgs = []
     valid_ndcgs = []
+    first_rel_ranks = []
 
     initial_train_ndcg = eval_on_test(nn, train_dl, device)
     training_ndcgs.append(initial_train_ndcg)
@@ -206,7 +207,6 @@ def train():
             if np.isnan(scores.detach().cpu().flatten().numpy()).any():
               print([param for param in nn.parameters()])
               print("label mat", labels_mat)
-              print("diff matrix prev", diff_mat)
               print("scores prev", scores)
               return
 
@@ -215,11 +215,24 @@ def train():
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
             lambda_i = lambda_ij.sum(dim=0)
 
+            torch.nn.utils.clip_grad_norm_(nn.parameters(), max_norm=10.0)
+
             # perform backward pass and correct for number of pairs
             scores.squeeze().backward(lambda_i / num_pairs)
             optimizer.step()
 
-            training_ndcg.append(evaluate_ndcg_at_k(y_batch.detach().cpu(), scores.detach().cpu(), 0))
+            labels, scores = np.array(y_batch.detach().cpu()).flatten(), np.array(scores.detach().cpu()).flatten()
+            random_i = np.random.permutation(np.arange(scores.shape[0]))
+            labels = labels[random_i]
+            scores = scores[random_i]
+
+            sort_ind = np.argsort(scores)[::-1]
+            sorted_labels = labels[sort_ind]
+            first_rel_rank = np.argmax(sorted_labels)
+            print(f"first rel rank: {first_rel_rank}")
+            first_rel_ranks.append(first_rel_rank)
+
+            training_ndcg.append(ndcg_at_k(labels, scores, 0))
 
             if overall_batch % FLAGS.eval_freq == 0 and overall_batch != 0:
                 valid_ndcg = eval_on_test(nn, valid_dl, device)
@@ -236,6 +249,8 @@ def train():
     torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")
 
     test_loss = eval_on_test(nn, test_dl, device)
+
+    print("Test Loss:", test_loss)
 
     if FLAGS.plotting:
         optimal_batch = 0
@@ -306,13 +321,13 @@ if __name__ == '__main__':
       help='Directory for storing input data')
     parser.add_argument('--neg_slope', type=float, default=NEG_SLOPE_DEFAULT,
       help='Negative slope parameter for LeakyReLU')
-    parser.add_argument('--optimizer', type=str, default="SGD",
+    parser.add_argument('--optimizer', type=str, default="Adam",
       help='Type of optimizer')
     parser.add_argument('--amsgrad', type=int, default=1,
                         help='Boolean: Amsgrad for Adam and Adamw')
     parser.add_argument('--batchnorm', type=int, default=1,
                         help='Boolean: apply batch normalization?')
-    parser.add_argument('--weightdecay', type=float, default=0,
+    parser.add_argument('--weightdecay', type=float, default=0.001,
       help='weight decay for optimizer')
     parser.add_argument('--momentum', type=float, default=0,
       help='momentum for optimizer')
