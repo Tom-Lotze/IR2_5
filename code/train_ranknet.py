@@ -22,7 +22,7 @@ NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
 
 def dcg_at_k(sorted_labels, k):
-    """ 
+    """
     Get the dcg at k, if k = 0 get the whole dcg.
     """
     if k > 0:
@@ -35,24 +35,24 @@ def dcg_at_k(sorted_labels, k):
     return dcg
 
 def ndcg_at_k(sorted_labels, ideal_labels, k):
-    """ 
+    """
     Get the ndcg at k, if k = 0 get the whole ndcg.
     """
     return dcg_at_k(sorted_labels, k) / dcg_at_k(ideal_labels, k)
 
 def evaluate_ndcg_at_k(labels, scores, k):
-    """ 
+    """
     Preprocessing steps to get the ndcg such as sorting the labels and flatting arrays.
     """
     labels, scores = np.array(labels).flatten(), np.array(scores).flatten()
     random_i = np.random.permutation(np.arange(scores.shape[0]))
     labels = labels[random_i]
     scores = scores[random_i]
-    
+
     sort_ind = np.argsort(scores)[::-1]
     sorted_labels = labels[sort_ind]
     ideal_labels = np.sort(labels)[::-1]
-    
+
     return ndcg_at_k(sorted_labels, ideal_labels, k)
 
 
@@ -109,7 +109,7 @@ def train():
     # extract all data and divide into train, valid and split dataloaders
     with open(os.path.join(FLAGS.data_dir, FLAGS.filename), "rb") as f:
         dataset = pkl.load(f)
-      
+
     train_ranges, test_valid_ranges = train_test_split(dataset.ranges, test_size=0.4)
     test_ranges, valid_ranges = train_test_split(test_valid_ranges, test_size=0.5)
 
@@ -120,7 +120,7 @@ def train():
     test_data = copy(dataset)
     test_data.ranges = test_ranges
     test_data = RankDataSet(test_data, FLAGS.use_preds)
-    
+
     valid_data = copy(dataset)
     valid_data.ranges = valid_ranges
     valid_data = RankDataSet(valid_data, FLAGS.use_preds)
@@ -136,7 +136,7 @@ def train():
       input_size = 5
 
     variables_string = f"ranking_sanity_{FLAGS.optimizer}_{FLAGS.learning_rate}_{FLAGS.weightdecay}_{FLAGS.momentum}_{FLAGS.dnn_hidden_units}_{FLAGS.dropout_probs}_{FLAGS.batchnorm}_{FLAGS.nr_epochs}_{FLAGS.use_preds}"
-    
+
     # initialize MLP
     nn = RankNet(input_size, dnn_hidden_units, dropout_percentages, 1, FLAGS.neg_slope, FLAGS.batchnorm).to(device)
 
@@ -156,15 +156,15 @@ def train():
                                     momentum=FLAGS.momentum)
     elif FLAGS.optimizer == "Adam":
         optimizer = torch.optim.Adam(nn.parameters(), lr=FLAGS.learning_rate,
-                                     amsgrad=FLAGS.amsgrad, 
+                                     amsgrad=FLAGS.amsgrad,
                                      weight_decay=FLAGS.weightdecay)
     elif FLAGS.optimizer == "AdamW":
         optimizer = torch.optim.AdamW(nn.parameters(), lr=FLAGS.learning_rate,
-                                      amsgrad=FLAGS.amsgrad, 
+                                      amsgrad=FLAGS.amsgrad,
                                       weight_decay=FLAGS.weightdecay)
     elif FLAGS.optimizer == "RMSprop":
         optimizer = torch.optim.RMSprop(nn.parameters(), lr=FLAGS.learning_rate,
-                                        weight_decay=FLAGS.weightdecay, 
+                                        weight_decay=FLAGS.weightdecay,
                                         momentum=FLAGS.momentum)
 
     overall_batch = 0
@@ -175,7 +175,7 @@ def train():
         print(f"\nEpoch: {epoch}")
 
         for x_batch, y_batch in train_dl:
-                
+
             optimizer.zero_grad()
 
             num_docs = x_batch.shape[1]
@@ -196,6 +196,8 @@ def train():
             labels_mat[labels_mat == 0] = 0
             labels_mat[labels_mat < 0] = -1
 
+
+
             # perform forward pass and compute lambdas
             scores = nn(x_batch).to(device)
             print("Batch:", overall_batch)
@@ -203,6 +205,8 @@ def train():
             print((np.isnan(scores.detach().cpu().flatten().numpy()).any()))
             if np.isnan(scores.detach().cpu().flatten().numpy()).any():
               return
+              print([param for param in nn.parameters()])
+              print("label mat", labels_mat)
             diff_mat = torch.sigmoid(torch.add(scores.T, -scores))
 
             lambda_ij = (1/2) * (1 - labels_mat) - diff_mat
@@ -223,11 +227,11 @@ def train():
                 print(f"Training ndcg: {mean_training_ndcg} / Valid ndcg: {valid_ndcg}")
 
                 #TODO Optimal model?
-            
+
             overall_batch += 1
 
     torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")
-    
+
     test_loss = eval_on_test(nn, test_dl, device)
 
     if FLAGS.plotting:
@@ -273,7 +277,7 @@ def eval_on_test(nn, dl, device):
 
             x_batch = x_batch.float().squeeze().to(device)
             y_batch = y_batch.float().reshape(-1, 1).to(device)
-            
+
             scores = nn(x_batch).to(device)
 
             ndcg = evaluate_ndcg_at_k(y_batch.cpu(), scores.cpu(), 0)
