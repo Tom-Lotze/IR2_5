@@ -248,9 +248,10 @@ def train():
 
     torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")
 
-    test_loss = eval_on_test(nn, test_dl, device)
+    test_loss, MRR_test = eval_on_test(nn, test_dl, device)
 
-    print("Test Loss:", test_loss)
+    print(f"training MRR: {np.mean(first_rel_ranks)}")
+    print(f"Test Loss: {test_loss}, MRR test: {MRR_test}")
 
     if FLAGS.plotting:
         optimal_batch = 0
@@ -291,6 +292,7 @@ def eval_on_test(nn, dl, device):
 
     with torch.no_grad():
         ndcgs = []
+        first_rel_ranks = []
         for x_batch, y_batch in dl:
 
             x_batch = x_batch.float().squeeze().to(device)
@@ -298,11 +300,21 @@ def eval_on_test(nn, dl, device):
 
             scores = nn(x_batch).to(device)
 
-            ndcg = evaluate_ndcg_at_k(y_batch.cpu(), scores.cpu(), 0)
+            labels, scores = np.array(y_batch.cpu()).flatten(), np.array(scores.detach().cpu()).flatten()
+            random_i = np.random.permutation(np.arange(scores.shape[0]))
+            labels = labels[random_i]
+            scores = scores[random_i]
+
+            sort_ind = np.argsort(scores)[::-1]
+            sorted_labels = labels[sort_ind]
+            first_rel_rank = np.argmax(sorted_labels)
+            first_rel_ranks.append(first_rel_rank)
+
+            ndcg = ndcg_at_k(labels, scores, 0)
 
             ndcgs.append(ndcg)
 
-    return np.mean(ndcgs)
+    return np.mean(ndcgs), np.mean(first_rel_ranks)
 
 if __name__ == '__main__':
     # Command line arguments
