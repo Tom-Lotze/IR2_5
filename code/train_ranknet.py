@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 DNN_HIDDEN_UNITS_DEFAULT = '32, 16'
 DROPOUT_DEFAULT = '0, 0, 0'
 LEARNING_RATE_DEFAULT = 1e-3
-NR_EPOCHS_DEFAULT = 2
+NR_EPOCHS_DEFAULT = 1
 EVAL_FREQ_DEFAULT = 5000
 NEG_SLOPE_DEFAULT = 0.02
 DATA_DIR_DEFAULT = "Data/"
@@ -39,21 +39,6 @@ def ndcg_at_k(sorted_labels, ideal_labels, k):
     Get the ndcg at k, if k = 0 get the whole ndcg.
     """
     return dcg_at_k(sorted_labels, k) / dcg_at_k(ideal_labels, k)
-
-def evaluate_ndcg_at_k(labels, scores, k):
-    """
-    Preprocessing steps to get the ndcg such as sorting the labels and flatting arrays.
-    """
-    labels, scores = np.array(labels).flatten(), np.array(scores).flatten()
-    random_i = np.random.permutation(np.arange(scores.shape[0]))
-    labels = labels[random_i]
-    scores = scores[random_i]
-
-    sort_ind = np.argsort(scores)[::-1]
-    sorted_labels = labels[sort_ind]
-    ideal_labels = np.sort(labels)[::-1]
-
-    return ndcg_at_k(sorted_labels, ideal_labels, k)
 
 
 def print_flags():
@@ -263,11 +248,12 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     os.makedirs("Images", exist_ok=True)
 
     plt.figure(figsize=(15, 9))
-    steps = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
+    train_steps = np.arange(0, len(train_losses)) * FLAGS.eval_freq
+    valid_steps = np.arange(0, len(valid_losses)) * FLAGS.eval_freq
 
     # plot the losses
-    plt.plot(steps, train_losses, '-', lw=2, label="Training NDCG")
-    plt.plot(steps, valid_losses, '-', lw=3, label="Validation NDCG")
+    plt.plot(train_steps, train_losses, '-', lw=2, label="Training NDCG")
+    plt.plot(valid_steps, valid_losses, '-', lw=3, label="Validation NDCG")
     plt.axhline(test_loss, label="Test NDCG", color="red", lw=3)
     # plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
     # plt.title('Losses over training, including final test loss using optimal model')
