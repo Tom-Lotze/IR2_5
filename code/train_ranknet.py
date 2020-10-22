@@ -238,7 +238,7 @@ def train():
 
     torch.save(nn.state_dict(), f"Models/Ranker_{variables_string}.pt")
 
-    test_loss, MRR_test = eval_on_test(nn, test_dl, device)
+    test_loss, MRR_test = eval_on_test(nn, test_dl, device, save_preds=True, variables_string=variables_string)
 
     print(f"training MRR: {np.mean(first_rel_ranks)}")
     print(f"Test Loss: {test_loss}, MRR test: {MRR_test}")
@@ -277,15 +277,17 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     fig_name = f"NDCGplot_{variables_string}.png"
     plt.savefig(f"Images/{fig_name}")
 
-def eval_on_test(nn, dl, device):
+def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
     """
     Find the ndcg on the test set, given the current weights
     """
     nn.eval()
     nn = nn.to(device)
 
+
     with torch.no_grad():
         ndcgs = []
+        preds = []
         first_rel_ranks = []
         for x_batch, y_batch in dl:
 
@@ -293,8 +295,10 @@ def eval_on_test(nn, dl, device):
             y_batch = y_batch.float().reshape(-1, 1).to(device)
 
             scores = nn(x_batch).to(device)
+            scores = (scores - torch.mean(scores)) / torch.std(scores)
 
             labels, scores = np.array(y_batch.cpu()).flatten(), np.array(scores.detach().cpu()).flatten()
+            preds.extend([i for i in scores])
             random_i = np.random.permutation(np.arange(scores.shape[0]))
             labels = labels[random_i]
             scores = scores[random_i]
@@ -308,6 +312,10 @@ def eval_on_test(nn, dl, device):
             ndcg = ndcg_at_k(sorted_labels, ideal_labels, 0)
 
             ndcgs.append(ndcg)
+
+    if save_preds:
+        with open(f"Predictions/ranker_preds_test_{variables_string}.p", "wb") as f:
+            pkl.dump(preds, f)
 
     return np.mean(ndcgs), np.mean(first_rel_ranks)
 
