@@ -287,7 +287,6 @@ def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
 
     with torch.no_grad():
         ndcgs = []
-        preds = []
         first_rel_ranks = []
         for x_batch, y_batch in dl:
 
@@ -298,7 +297,6 @@ def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
             scores = (scores - torch.mean(scores)) / torch.std(scores)
 
             labels, scores = np.array(y_batch.cpu()).flatten(), np.array(scores.detach().cpu()).flatten()
-            preds.extend([i for i in scores])
             random_i = np.random.permutation(np.arange(scores.shape[0]))
             labels = labels[random_i]
             scores = scores[random_i]
@@ -314,8 +312,8 @@ def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
             ndcgs.append(ndcg)
 
     if save_preds:
-        with open(f"Predictions/ranker_preds_test_{variables_string}.p", "wb") as f:
-            pkl.dump(preds, f)
+        with open(f"Predictions/ranker_ndcgs_test_{variables_string}.p", "wb") as f:
+            pkl.dump(ndcgs, f)
 
     return np.mean(ndcgs), np.mean(first_rel_ranks)
 
