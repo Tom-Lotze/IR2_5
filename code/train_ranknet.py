@@ -266,7 +266,7 @@ def plotting(train_losses, valid_losses, test_loss, variables_string, optimal_ba
     # plt.axvline(optimal_batch, linestyle="dashed", color='red', label="Optimal model", lw=3)
     # plt.title('Losses over training, including final test loss using optimal model')
 
-    plt.ylim((0.4, 0.8))
+    plt.ylim((0.45, 0.7))
     plt.xlabel('Batch')
     plt.ylabel('NDCG')
     plt.grid(True)
