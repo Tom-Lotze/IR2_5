@@ -314,6 +314,8 @@ def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
     if save_preds:
         with open(f"Predictions/ranker_ndcgs_test_{variables_string}.p", "wb") as f:
             pkl.dump(ndcgs, f)
+        with open(f"Predictions/ranker_MRR_test_{variables_string}.p", "wb") as f:
+            pkl.dump(first_rel_ranks, f)
 
     return np.mean(ndcgs), np.mean(first_rel_ranks)
 
