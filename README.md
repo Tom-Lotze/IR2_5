@@ -19,4 +19,4 @@ To train any of the models, run train_{modelname}.py:
 
     python code/train_{modelname}.py -h
 
-Scripts for running the preprocessing and training on Surflisa is available in the "scripts/" folder.
+Scripts for running the preprocessing and training on Surflisa is available in the "./scripts/" folder.
