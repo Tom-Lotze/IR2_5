@@ -304,7 +304,7 @@ def eval_on_test(nn, dl, device, save_preds=False, variables_string=None):
             sort_ind = np.argsort(scores)[::-1]
             sorted_labels = labels[sort_ind]
             ideal_labels = np.sort(labels)[::-1]
-            first_rel_rank = np.argmax(sorted_labels)
+            first_rel_rank = 1 / (np.argmax(sorted_labels > 0) + 1)
             first_rel_ranks.append(first_rel_rank)
 
             ndcg = ndcg_at_k(sorted_labels, ideal_labels, 0)
