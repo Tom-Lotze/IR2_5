@@ -2,7 +2,7 @@
 # @Author: TomLotze
 # @Date:   2020-10-15 15:09
 # @Last Modified by:   TomLotze
-# @Last Modified time: 2020-10-23 10:06
+# @Last Modified time: 2021-02-24 20:36
 
 from scipy.stats import ttest_rel
 import numpy as np
@@ -14,8 +14,8 @@ from ranknet import RankNet
 
 np.random.seed(42)
 regression=False
-ranker = True
-
+ndcg = True
+mrr = True
 ##### REGRESSION VS. CLASSIFICATION
 if regression:
     for reduced_classes in [True, False]:
@@ -44,7 +44,7 @@ if regression:
 
 
 ##### RANKER ABLATION STUDY
-if ranker:
+if ndcg:
     with open(f"Predictions/ranker_ndcgs_test_ranking_Adam_0.001_0.001_0_32, 16_0, 0, 0_True_5_False.p", "rb") as f:
         ranker_false = pkl.load(f)
 
@@ -66,6 +66,28 @@ if ranker:
 
     print(f"p-value: {p_value}")
 
+
+if mrr:
+    with open(f"Predictions/ranker_MRR_test_ranking_Adam_0.001_0.001_0_32, 16_0, 0, 0_True_5_False.p", "rb") as f:
+        ranker_false = pkl.load(f)
+
+    with open(f"Predictions/ranker_MRR_test_ranking_Adam_0.001_0.001_0_32, 16_0, 0, 0_True_5_True.p", "rb") as f:
+        ranker_true = pkl.load(f)
+
+    if np.isnan(np.array(ranker_false)).any():
+        print("nan found")
+    if np.isnan(np.array(ranker_true)).any():
+        print("nan found")
+
+    print(len(ranker_false), len(ranker_true))
+    # print(ranker_true[-20:])
+    # print(ranker_false[-20:])
+    assert len(ranker_false) == len(ranker_true)
+
+    t_stat, p_value = ttest_rel(ranker_false, ranker_true)
+
+
+    print(f"p-value: {p_value}")
 
 
 

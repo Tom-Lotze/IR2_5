@@ -85,7 +85,7 @@ def run(FLAGS):
     engagement_lvls = engagement_lvls.long()
     mode_one_hot = torch.nn.functional.one_hot(mode.long(), 11).float()
     median_one_hot = torch.nn.functional.one_hot(median.long(), 11).float()
-    
+
     CE_mode = CE_loss(mode_one_hot, engagement_lvls)
     accuracy_mode = get_accuracy(mode_one_hot, engagement_lvls)
 
@@ -105,9 +105,9 @@ if __name__ == "__main__":
                         help='Folder where the data is located')
     parser.add_argument('--filename', type=str, default="MIMICS-Click.tsv",
                         help='Filename of the data')
-    parser.add_argument('--balance', type=int, default=0,
+    parser.add_argument('--balance', type=int, default=1,
                         help='Balance the data by fixing the distributions')
-    parser.add_argument('--impression', type=int, default=1,
+    parser.add_argument('--impression', type=int, default=0,
                         help='Use only the most shown clarification panes')
     parser.add_argument('--reduced_classes', type=int, default=0,
                         help='Number of classes to consider, either 11 or 2')
